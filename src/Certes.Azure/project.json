@@ -6,6 +6,7 @@
 
   "dependencies": {
     "Certes": "1.0.0-*",
+    "Microsoft.AspNetCore.Hosting.Abstractions": "1.0.0",
     "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
     "Microsoft.Extensions.Logging": "1.0.0",
     "Microsoft.Extensions.Options": "1.0.0"
