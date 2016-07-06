@@ -2,6 +2,8 @@
   "version": "1.0.0-*",
   "title": "Certes ACME Client",
   "description": "A client implantation for the Automated Certificate Management Environment (ACME) protocol",
+  "authors": [ "Eddie Lin" ],
+
   "dependencies": {
     "NETStandard.Library": "1.6.0",
     "Newtonsoft.Json": "9.0.1",

@@ -1,17 +1,54 @@
 {
   "version": "1.0.0-*",
+  "title": "Certes ACME Client for Azure App Services",
+  "description": "A client implantation for the Automated Certificate Management Environment (ACME) protocol",
+  "authors": [ "Eddie Lin" ],
 
   "dependencies": {
-    "Certes": "1.0.0-*"
+    "Certes": "1.0.0-*",
+    "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
+    "Microsoft.Extensions.Logging": "1.0.0",
+    "Microsoft.Extensions.Options": "1.0.0"
   },
 
   "frameworks": {
-    "net45": {},
     "netstandard1.6": {
       "imports": "dnxcore50",
       "dependencies": {
         "NETStandard.Library": "1.6.0"
       }
     }
+  },
+  "buildOptions": {
+    "embed": [
+      "Resources/**/*.*"
+    ]
+  },
+  "compilationOptions": {
+    "warningsAsErrors": true,
+    "xmlDoc": true
+  },
+  "packOptions": {
+    "projectUrl": "https://github.com/fszlin/certes",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/fszlin/certes"
+    },
+    "summary": "Certes ACME components for enabling automatic certificate renewal in Azure App Services",
+    "owners": [
+      "Certes Contributors"
+    ],
+    "licenseUrl": "https://github.com/fszlin/certes/blob/master/LICENSE",
+    "requireLicenseAcceptance": false,
+    "tags": [
+      "Certes",
+      "letsencrypt",
+      "ACME",
+      "HTTPS",
+      "SSL",
+      "Certificate",
+      "Azure",
+      "App Services"
+    ]
   }
 }
