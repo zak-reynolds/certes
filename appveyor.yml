@@ -37,11 +37,12 @@ build_script:
   - ps: $packageJson = Get-Content -Raw .\src\Certes.Azure\project.json | ConvertFrom-Json
   - ps: $packageJson.version = $packageVersion
   - ps: $packageJson.dependencies.Certes = $packageVersion
-  - ps: $packageJson | ConvertTo-Json | Set-Content .\src\Certes.Cli\project.json
+  - ps: $packageJson | ConvertTo-Json | Set-Content .\src\Certes.Azure\project.json
   - ps: echo "Update dependency versions for Certes.Tests"
   - ps: $packageJson = Get-Content -Raw .\test\Certes.Tests\project.json | ConvertFrom-Json
   - ps: $packageJson.dependencies.Certes = $packageVersion
   - ps: $packageJson.dependencies.'Certes.Cli' = $packageVersion
+  - ps: $packageJson.dependencies.'Certes.Azure' = $packageVersion
   - ps: $packageJson | ConvertTo-Json | Set-Content .\test\Certes.Tests\project.json
   - dotnet --info
   - dotnet restore
