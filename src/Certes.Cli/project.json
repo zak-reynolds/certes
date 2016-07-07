@@ -8,7 +8,6 @@
 
   "dependencies": {
     "Certes": "1.0.0-*",
-    "Certes.Azure": "1.0.0-*",
     "Microsoft.NETCore.App": {
       "type": "platform",
       "version": "1.0.0"
