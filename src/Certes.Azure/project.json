@@ -35,10 +35,9 @@
   "buildOptions": {
     "embed": [
       "Resources/**/*.*"
-    ]
-  },
-  "compilationOptions": {
+    ],
     "warningsAsErrors": true,
+    "nowarn": [ "CS1591" ],
     "xmlDoc": true
   },
   "packOptions": {

@@ -12,7 +12,7 @@ namespace Certes.Azure
     public class AzureWebAppSslBindingManager : ISslBindingManager
     {
         private readonly AzureWebAppManagementOptions options;
-        private TokenCredentials token;
+        //private TokenCredentials token;
 
         public AzureWebAppSslBindingManager(IOptions<AzureWebAppManagementOptions> options)
         {
