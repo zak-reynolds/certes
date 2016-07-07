@@ -108,4 +108,7 @@ deploy:
     symbol_server:           # remove to push symbols to SymbolSource.org
     artifact: nupkg,nupkg-azure
     on:
-      branch: dev,dev-azure
+      branch:
+        - dev
+        - dev-azure
+
