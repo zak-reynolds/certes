@@ -3,7 +3,10 @@
   "authors": [ "Eddie Lin" ],
 
   "buildOptions": {
-    "emitEntryPoint": true
+    "emitEntryPoint": true,
+    "warningsAsErrors": true,
+    "nowarn": [ "CS1591" ],
+    "xmlDoc": true
   },
 
   "dependencies": {

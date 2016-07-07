@@ -17,7 +17,7 @@ certificates using .NET or command line, and it is **free**.
 
 Install [.NET Core](https://www.microsoft.com/net/core)
 
-Donwload the [latest release](https://github.com/fszlin/certes/releases), 
+Download the [latest release](https://github.com/fszlin/certes/releases), 
    and extract the files
 
 Run these commands to start the authorization process
@@ -39,7 +39,7 @@ Make changes to your site so that it serves the **key authorization string**
     of the registration key, in form of `<token>.<thumbprint>`
   * You can simply save the **key authorization string** in a text file, and
     upload it to `http://my_domain.com/.well-known/acme-challenge/<token>`
-  * For testing purpuse, if you are hosting an ASP.NET Core app, you can add
+  * For testing purposes, if you are hosting an ASP.NET Core app, you can add
     the following to ```Configure``` method of ```Startup``` class
 
 ```C#
@@ -98,6 +98,8 @@ You can get Certes by grabbing the latest
 [NuGet package](https://www.nuget.org/packages/Certes).
 
 ```C#
+using (var client = new AcmeClient(WellKnownServers.LetsEncrypt))
+{
     // Create new registration
     var account = await client.NewRegistraton("mailto:test@example.com");
 
@@ -108,34 +110,43 @@ You can get Certes by grabbing the latest
     // Initialize authorization
     var authz = await client.NewAuthorization(new AuthorizationIdentifier
     {
-        Type = "dns",
+        Type = AuthorizationIdentifierTypes.Dns,
         Value = "www.my_domain.com"
     });
 
     // Comptue key authorization for http-01
-    var httpChallengeInfo = authz.Data.Challenges.Where(c => c.Type == "http-01").First();
+    var httpChallengeInfo = authz.Data.Challenges.Where(c => c.Type == ChallengeTypes.Http01).First();
     var keyAuthString = client.ComputeKeyAuthorization(httpChallengeInfo);
+    
+    // Do something to fullfill the challenge,
+    // e.g. upload key auth string to well known path, or make changes to DNS
 
+    // Info ACME server to validate the identifier
     var httpChallenge = await client.CompleteChallenge(httpChallengeInfo);
 
     // Check authorization status
     authz = await client.GetAuthorization(httpChallenge.Location);
-    while (authz.Data.Status == "pending")
+    while (authz.Data.Status == EntityStatus.Pending)
     {
-        await Task.Delay(500);
+        // Wait for ACME server to validate the identifier
+        await Task.Delay(10000);
         authz = await client.GetAuthorization(httpChallenge.Location);
     }
 
-    // Create certificate
-    var csr = new CertificationRequestBuilder();
-    csr.AddName("CN", "www.my_domain.com");
-    var cert = await client.NewCertificate(csr);
+    if (authz.Data.Status == EntityStatus.Valid)
+    {
+        // Create certificate
+        var csr = new CertificationRequestBuilder();
+        csr.AddName("CN", "www.my_domain.com");
+        var cert = await client.NewCertificate(csr);
 
-    // Export Pfx
-    var pfxBuilder = cert.ToPfx();
-    var pfx = pfxBuilder.Build("my-free-cert", "abcd1234");
-    File.WriteAllBytes("./my-free-cert.pfx", pfx);
-    
-    // Revoke certificate
-    await client.RevokeCertificate(cert);
+        // Export Pfx
+        var pfxBuilder = cert.ToPfx();
+        var pfx = pfxBuilder.Build("my-free-cert", "abcd1234");
+        File.WriteAllBytes("./my-free-cert.pfx", pfx);
+
+        // Revoke certificate
+        await client.RevokeCertificate(cert);
+    }
+}
 ```

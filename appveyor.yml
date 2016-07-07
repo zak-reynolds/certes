@@ -1,8 +1,12 @@
-version: 1.0.1.{build}
+version: 1.0.2.{build}
 build:
   verbosity: minimal
 
 skip_tags: true
+
+skip_commits:
+  files:
+  - '*.md'
 
 branches:
   # whitelist
@@ -85,7 +89,7 @@ deploy:
     auth_token:
       secure: B+lTI7i/tnZeg1ZSmho3HvOWjs0C4hptNy5cvWgF0Nn7b6v8nwT/mxEWVCfIJ7Fy
     artifact: nupkg,cli
-    draft: false
+    draft: true
     prerelease: true
     on:
       branch: dev
