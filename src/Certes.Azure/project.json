@@ -6,17 +6,29 @@
 
   "dependencies": {
     "Certes": "1.0.0-*",
-    "Microsoft.AspNetCore.Hosting.Abstractions": "1.0.0",
-    "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
+    "Microsoft.Azure.Management.ResourceManager": "1.1.3-preview",
+    "Microsoft.Azure.Management.Websites": "1.3.2-preview",
     "Microsoft.Extensions.Logging": "1.0.0",
-    "Microsoft.Extensions.Options": "1.0.0"
+    "Microsoft.Extensions.Options": "1.0.0",
+    "Microsoft.IdentityModel.Clients.ActiveDirectory": "3.10.305231913"
   },
 
   "frameworks": {
+    "net45": {
+      "buildOptions": {
+        "compile": {
+          "exclude": [
+            "CertesMiddleware.cs"
+          ]
+        }
+      }
+    },
     "netstandard1.6": {
       "imports": "dnxcore50",
       "dependencies": {
-        "NETStandard.Library": "1.6.0"
+        "NETStandard.Library": "1.6.0",
+        "Microsoft.AspNetCore.Hosting.Abstractions": "1.0.0",
+        "Microsoft.AspNetCore.Http.Abstractions": "1.0.0"
       }
     }
   },

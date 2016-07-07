@@ -1,3 +1,6 @@
 
-Write-Output "Certes $($Env:WEBSITE_HOSTNAME)"
+$endpoint = "https://$($Env:WEBSITE_HOSTNAME)/.certies/renew"
+Write-Output "Start checking certificates..."
+Write-Output "Using endpoint $($endpoint)"
 
+wget $endpoint

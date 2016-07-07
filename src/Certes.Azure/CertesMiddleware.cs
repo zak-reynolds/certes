@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Rest;
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -26,7 +29,41 @@ namespace Certes.Azure
 
         public async Task Invoke(HttpContext context)
         {
+            // 1.   Check SSL status
+            await CheckCertificates();
+            // 2.   Get reg data
+            // 2.1  New reg
+            // 3.   Check authz status
+            // 4.   Do authz
+            // 5.   Do cert
             await next.Invoke(context);
+        }
+
+        private async Task CheckCertificates()
+        {
+            var siteName = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME");
+            var tenantId = "";
+            var clientId = "";
+            var clientSecret = "";
+            var subscriptionId = "";
+            var resourceGroup = "";
+
+            var authContext = new AuthenticationContext($"https://login.windows.net/{tenantId}");
+            var credential = new ClientCredential(clientId, clientSecret);
+            var token = await authContext.AcquireTokenAsync("https://management.azure.com/", credential);
+            var credentials = new TokenCredentials(token.AccessToken);
+            
+            using (var client = new Microsoft.Azure.Management.WebSites.WebSiteManagementClient(credentials)
+            {
+                SubscriptionId = subscriptionId
+            })
+            {
+                var siteResp = await client.Sites.GetSiteHostNameBindingsWithHttpMessagesAsync(resourceGroup, siteName);
+                //siteResp.Body.Value;
+                // WEBSITE_SITE_NAME
+                // WEBSITE_SLOT_NAME 
+                //client.Sites.get
+            }
         }
     }
 
@@ -38,9 +75,14 @@ namespace Certes.Azure
         {
             app.Map("/.certes/renew", sub =>
             {
-                app.UseMiddleware<CertesMiddleware>();
+                sub.UseMiddleware<CertesMiddleware>();
             });
+            
+            return app;
+        }
 
+        public static IApplicationBuilder UseCertesChallengeHandler(this IApplicationBuilder app)
+        {
             app.Map("/.well-known/acme-challenge", sub =>
             {
             });
