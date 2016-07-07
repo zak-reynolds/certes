@@ -20,7 +20,7 @@ namespace Certes.Azure
         private readonly ILogger logger;
         private readonly CertesOptions options;
 
-        public CertesMiddleware(RequestDelegate next, IOptions<CertesOptions> optionsAccessor, LoggerFactory loggerFactory)
+        public CertesMiddleware(RequestDelegate next, IOptions<CertesOptions> optionsAccessor, ILoggerFactory loggerFactory)
         {
             this.next = next;
             this.logger = loggerFactory.CreateLogger<CertesMiddleware>();
@@ -32,7 +32,13 @@ namespace Certes.Azure
             if (!webJobInitialized)
             {
                 var env = context.RequestServices.GetRequiredService<IHostingEnvironment>();
-                var webJobPath = Path.Combine(env.ContentRootPath, "App_Data/Triggered/Certes");
+                var webJobPath = Path.Combine(env.ContentRootPath, "app_data/jobs/triggered/certes");
+
+                var dir = new DirectoryInfo(webJobPath);
+                if (!dir.Exists)
+                {
+                    dir.Create();
+                }
 
                 var assembly = typeof(CertesMiddleware).GetTypeInfo().Assembly;
                 var webJobFiles = assembly
