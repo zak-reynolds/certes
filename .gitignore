@@ -244,3 +244,7 @@ ModelManifest.xml
 
 _test/
 build/
+PublishProfiles/
+launchSettings.json
+
+app_data/

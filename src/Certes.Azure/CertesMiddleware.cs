@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Certes.Azure
@@ -14,7 +15,7 @@ namespace Certes.Azure
     public class CertesMiddleware
     {
         private const string WebJobFilePrefix = "Certes.Azure.Resources.WebJob.";
-        private bool webJobInitialized = false;
+        private int webJobInitialized = 0;
 
         private readonly RequestDelegate next;
         private readonly ILogger logger;
@@ -29,7 +30,7 @@ namespace Certes.Azure
 
         public async Task Invoke(HttpContext context)
         {
-            if (!webJobInitialized)
+            if (0 == Interlocked.CompareExchange(ref webJobInitialized, 1, 0))
             {
                 var env = context.RequestServices.GetRequiredService<IHostingEnvironment>();
                 var webJobPath = Path.Combine(env.ContentRootPath, "app_data/jobs/triggered/certes");
@@ -51,9 +52,9 @@ namespace Certes.Azure
                     var filename = file.Substring(WebJobFilePrefix.Length);
                     var dest = Path.Combine(webJobPath, filename);
                     using (var destStream = File.Create(dest))
-                    using (var srcStream = assembly.GetManifestResourceStream(dest))
+                    using (var srcStream = assembly.GetManifestResourceStream(file))
                     {
-                        srcStream.CopyTo(destStream);
+                        await srcStream.CopyToAsync(destStream);
                     }
                 }
             }
