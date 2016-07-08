@@ -13,6 +13,7 @@ namespace Certes.Azure
     public class AzureWebAppSslBindingManager : ISslBindingManager
     {
         private readonly AzureWebAppManagementOptions options;
+        private AuthenticationResult token;
 
         public AzureWebAppSslBindingManager(IOptions<AzureWebAppManagementOptions> options)
         {
@@ -21,15 +22,7 @@ namespace Certes.Azure
 
         public async Task<IList<SslBinding>> GetHostNames()
         {
-            var authContext = new AuthenticationContext($"https://login.windows.net/{options.TenantId}");
-            var credential = new ClientCredential(options.ClientId, options.ClientSecret);
-            var token = await authContext.AcquireTokenAsync("https://management.azure.com/", credential);
-            var credentials = new TokenCredentials(token.AccessToken);
-
-            using (var client = new WebSiteManagementClient(credentials)
-            {
-                SubscriptionId = options.SubscriptionId
-            })
+            using (var client = await CreateClient())
             {
                 var sites = await client.Sites.GetSiteAsync(options.ResourceGroup, options.Name);
                 var bindings = sites.HostNameSslStates
@@ -54,6 +47,22 @@ namespace Certes.Azure
 
                 return bindings;
             }
+        }
+
+        private async Task<WebSiteManagementClient> CreateClient()
+        {
+            if (token == null || token.ExpiresOn < DateTimeOffset.Now)
+            {
+                var authContext = new AuthenticationContext($"https://login.windows.net/{options.TenantId}");
+                var credential = new ClientCredential(options.ClientId, options.ClientSecret);
+                this.token = await authContext.AcquireTokenAsync("https://management.azure.com/", credential);
+            }
+
+            var credentials = new TokenCredentials(this.token.AccessToken);
+            return new WebSiteManagementClient(credentials)
+            {
+                SubscriptionId = options.SubscriptionId
+            };
         }
     }
 }
