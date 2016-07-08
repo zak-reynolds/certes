@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using System.IO;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -8,17 +9,18 @@ namespace Certes.Azure
 {
     public class AzureWebAppSslBindingManagerTests
     {
-        [Fact(Skip = "In progress")]
+        [Fact]
         public async Task CanGetHostNames()
         {
             var config = new ConfigurationBuilder()
+                .SetBasePath(Path.GetFullPath("./"))
                 .AddUserSecrets()
                 .AddEnvironmentVariables()
                 .Build();
-
+            
             var services = new ServiceCollection();
             services.AddOptions();
-            services.Configure<AzureWebAppManagementOptions>(config);
+            services.Configure<AzureWebAppManagementOptions>(config.GetSection("certes"));
             
             var serviceProvider = services.BuildServiceProvider();
             var options = serviceProvider.GetRequiredService<IOptions<AzureWebAppManagementOptions>>();
