@@ -13,8 +13,7 @@ namespace Certes.Azure
         public async Task CanGetHostNames()
         {
             var config = new ConfigurationBuilder()
-                .SetBasePath(Path.GetFullPath("./"))
-                .AddUserSecrets()
+                .AddUserSecrets("certes-dev")
                 .AddEnvironmentVariables()
                 .Build();
             
