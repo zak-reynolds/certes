@@ -88,7 +88,7 @@ namespace Certes.Azure
                                 // Make sure the key authz string is ready
                                 challenge.KeyAuthorization = client.ComputeKeyAuthorization(challenge);
 
-                                var responder = this.challengeResponderFactory.GetResponder(challenge.Type);
+                                var responder = await this.challengeResponderFactory.GetResponder(challenge.Type);
                                 await responder.Deploy(challenge);
                             }
                         }
@@ -189,7 +189,7 @@ namespace Certes.Azure
                     var challenges = authz.Data.Combinations
                         .Where(combination => !combination
                             .Select(i => authz.Data.Challenges[i])
-                            .Any(c => !this.challengeResponderFactory.IsSupported(c.Type)))
+                            .Any(c => this.challengeResponderFactory.IsSupported(c.Type)))
                         .Select(combination => combination.Select(i => authz.Data.Challenges[i]).ToArray())
                         .FirstOrDefault();
 
