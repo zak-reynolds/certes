@@ -21,7 +21,7 @@ assembly_info:
   assembly_version: "1.0"
 
 environment:
-  certes__tenentId:
+  certes__tenantId:
     secure: 4FrR9+ARA8H+bLFFQDT4C1TAZv/LTO69vFpfjpqR5BVTedqgsZcey6xuS2TDA46l
   certes__clientId:
     secure: s0tJTf4OqtsG0ze5ZL0g4kWcVw3oMnNiaepf0cwkh1U1s214jf1AdwGuFss2y7q7
