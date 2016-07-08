@@ -143,10 +143,12 @@ namespace Certes.Azure
 
                     var cert = await client.NewCertificate(csr);
 
-                    var password = Guid.NewGuid().ToString("N"); // TODO: make configurable
-                    var pfx = cert.ToPfx().Build($"certes-{Guid.NewGuid().ToString("N")}", password);
-                    
+                    // TODO: check if the cert contains all the requested host names
+
                     var thumbprint = cert.GetThumbprint();
+                    var password = Guid.NewGuid().ToString("N"); // TODO: make configurable
+                    var pfx = cert.ToPfx().Build($"certes-{thumbprint}", password);
+                    
                     await bindingManager.InstallCertificate(thumbprint, pfx, password);
                     await bindingManager.UpdateSslBindings(thumbprint, hostNames);
                 }

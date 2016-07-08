@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using Microsoft.Rest;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -13,11 +11,15 @@ namespace Certes.Azure
         public DateTimeOffset CertificateExpires { get; set; }
     }
 
-    public class AzureWebAppManagementOptions
+    public class AzureManagementClientOptions
     {
         public string TenantId { get; set; }
         public string ClientId { get; set; }
         public string ClientSecret { get; set; }
+    }
+
+    public class AzureWebAppOptions
+    {
         public string SubscriptionId { get; set; }
         public string ResourceGroup { get; set; }
         public string Name { get; set; }

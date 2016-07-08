@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using System.IO;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -19,12 +17,16 @@ namespace Certes.Azure
             
             var services = new ServiceCollection();
             services.AddOptions();
-            services.Configure<AzureWebAppManagementOptions>(config.GetSection("certes"));
-            
+            services.Configure<AzureManagementClientOptions>(config.GetSection("certes"));
+            services.Configure<AzureWebAppOptions>(config.GetSection("certes"));
+
+            services.AddTransient<IAzureClientCredentialProvider, AzureClientCredentialProvider>();
+            services.AddTransient<ISslBindingManager, AzureWebAppSslBindingManager>();
+
             var serviceProvider = services.BuildServiceProvider();
-            var options = serviceProvider.GetRequiredService<IOptions<AzureWebAppManagementOptions>>();
             
-            var mgr = new AzureWebAppSslBindingManager(options);
+            var mgr = serviceProvider.GetRequiredService<ISslBindingManager>();
+            Assert.IsType<AzureWebAppSslBindingManager>(mgr);
             await mgr.GetHostNames();
         }
     }

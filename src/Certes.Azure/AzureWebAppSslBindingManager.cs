@@ -1,7 +1,6 @@
 ﻿using Microsoft.Azure.Management.WebSites;
 using Microsoft.Azure.Management.WebSites.Models;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using System;
 using System.Collections.Generic;
@@ -12,12 +11,13 @@ namespace Certes.Azure
 {
     public class AzureWebAppSslBindingManager : ISslBindingManager
     {
-        private readonly AzureWebAppManagementOptions options;
-        private AuthenticationResult token;
+        private readonly IAzureClientCredentialProvider accessTokenProvider;
+        private readonly AzureWebAppOptions options;
 
-        public AzureWebAppSslBindingManager(IOptions<AzureWebAppManagementOptions> options)
+        public AzureWebAppSslBindingManager(IOptions<AzureWebAppOptions> options, IAzureClientCredentialProvider accessTokenProvider)
         {
             this.options = options.Value;
+            this.accessTokenProvider = accessTokenProvider;
         }
 
         public async Task<IList<SslBinding>> GetHostNames()
@@ -74,18 +74,13 @@ namespace Certes.Azure
 
         private async Task<WebSiteManagementClient> CreateClient()
         {
-            if (token == null || token.ExpiresOn < DateTimeOffset.Now)
-            {
-                var authContext = new AuthenticationContext($"https://login.windows.net/{options.TenantId}");
-                var credential = new ClientCredential(options.ClientId, options.ClientSecret);
-                this.token = await authContext.AcquireTokenAsync("https://management.azure.com/", credential);
-            }
-
-            var credentials = new TokenCredentials(this.token.AccessToken);
+            var token = await this.accessTokenProvider.GetOrCreateAccessToken();
+            var credentials = new TokenCredentials(token);
             return new WebSiteManagementClient(credentials)
             {
                 SubscriptionId = options.SubscriptionId
             };
         }
     }
+
 }
