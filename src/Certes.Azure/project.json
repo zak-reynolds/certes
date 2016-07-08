@@ -24,7 +24,7 @@
         }
       }
     },
-    "netstandard1.6": {
+    "netstandard1.5": {
       "dependencies": {
         "Microsoft.AspNetCore.Hosting.Abstractions": "1.0.0",
         "Microsoft.AspNetCore.Http.Abstractions": "1.0.0"
