@@ -33,7 +33,7 @@ namespace Certes.Azure
                         CertificateThumbprint = h.SslState == SslState.Disabled ? null : h.Thumbprint
                     })
                     .ToArray();
-                
+
                 foreach (var group in bindings.Where(b => b.CertificateThumbprint != null).GroupBy(b => b.CertificateThumbprint))
                 {
                     var thumbprint = group.Select(g => g.CertificateThumbprint).First();
@@ -46,6 +46,29 @@ namespace Certes.Azure
                 }
 
                 return bindings;
+            }
+        }
+
+        public async Task InstallCertificate(string certificateThumbprint, byte[] pfxBlob, string password)
+        {
+            using (var client = await CreateClient())
+            {
+                await client.Certificates.CreateOrUpdateCertificateAsync(options.ResourceGroup, certificateThumbprint, new Certificate
+                {
+                    PfxBlob = Convert.ToBase64String(pfxBlob),
+                    Password = password
+                });
+            }
+        }
+
+        public async Task UpdateSslBindings(string certificateThumbprint, IList<string> hostNames)
+        {
+            using (var client = await CreateClient())
+            {
+                await client.Certificates.CreateOrUpdateCertificateAsync(options.ResourceGroup, certificateThumbprint, new Certificate
+                {
+                    HostNames = hostNames
+                });
             }
         }
 
