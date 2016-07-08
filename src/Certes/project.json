@@ -16,7 +16,7 @@
         "System.Security.Cryptography.Csp": "4.0.0"
       }
     },
-    "net45": {}
+    "net451": {}
   },
   "buildOptions": {
     "embed": [
