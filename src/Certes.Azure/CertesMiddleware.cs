@@ -4,9 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Microsoft.Rest;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -19,18 +18,29 @@ namespace Certes.Azure
         private readonly RequestDelegate next;
         private readonly ILogger logger;
         private readonly CertesOptions options;
+        private readonly ISslBindingManager bindingManager;
 
-        public CertesMiddleware(RequestDelegate next, IOptions<CertesOptions> optionsAccessor, ILoggerFactory loggerFactory)
+        public CertesMiddleware(
+            RequestDelegate next,
+            IOptions<CertesOptions> optionsAccessor,
+            ILoggerFactory loggerFactory,
+            ISslBindingManager bindingManager)
         {
             this.next = next;
             this.logger = loggerFactory.CreateLogger<CertesMiddleware>();
             this.options = optionsAccessor.Value;
+            this.bindingManager = bindingManager;
         }
 
         public async Task Invoke(HttpContext context)
         {
-            // 1.   Check SSL status
-            await CheckCertificates();
+            var bindingGroups = await CheckCertificates();
+            if (bindingGroups.Count == 0)
+            {
+                // All host names have valid SSL
+                return;
+            }
+
             // 2.   Get reg data
             // 2.1  New reg
             // 3.   Check authz status
@@ -39,31 +49,25 @@ namespace Certes.Azure
             await next.Invoke(context);
         }
 
-        private async Task CheckCertificates()
+        private async Task<IList<IList<SslBinding>>> CheckCertificates()
         {
-            var siteName = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME");
-            var tenantId = "";
-            var clientId = "";
-            var clientSecret = "";
-            var subscriptionId = "";
-            var resourceGroup = "";
+            var hostNames = await bindingManager.GetHostNames();
 
-            var authContext = new AuthenticationContext($"https://login.windows.net/{tenantId}");
-            var credential = new ClientCredential(clientId, clientSecret);
-            var token = await authContext.AcquireTokenAsync("https://management.azure.com/", credential);
-            var credentials = new TokenCredentials(token.AccessToken);
-            
-            using (var client = new Microsoft.Azure.Management.WebSites.WebSiteManagementClient(credentials)
-            {
-                SubscriptionId = subscriptionId
-            })
-            {
-                var siteResp = await client.Sites.GetSiteHostNameBindingsWithHttpMessagesAsync(resourceGroup, siteName);
-                //siteResp.Body.Value;
-                // WEBSITE_SITE_NAME
-                // WEBSITE_SLOT_NAME 
-                //client.Sites.get
-            }
+            // TODO: Support grouping host names by user filters, and specific CN
+
+            // Group host names so we don't hit the SAN limit
+            var namePerCert = options.MaxSanPerCert + 1; // with common name
+            var bindingGroup = hostNames
+                .OrderBy(h => h.HostName) // The groups should not change for the same set of host names
+                .Select((h, i) => new { Group = i / options.MaxSanPerCert, Binding = h })
+                .GroupBy(g => g.Group, g => g.Binding);
+
+            // Renew only if no cert, or the cert is about to expire
+            var renewDate = DateTimeOffset.Now.Add(options.RenewBeforeExpire);
+            bindingGroup = bindingGroup
+                .Where(g => g.Any(b => b.CertificateThumbprint == null || b.CertificateExpires <= renewDate));
+
+            return bindingGroup.Select(b => b.ToArray()).ToArray();
         }
     }
 
