@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Certes.Acme;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,17 +20,26 @@ namespace Certes.Azure
         private readonly ILogger logger;
         private readonly CertesOptions options;
         private readonly ISslBindingManager bindingManager;
+        private readonly IContextStore contextStore;
+        private readonly IChallengeResponderFactory challengeResponderFactory;
+        private readonly ICsrBuilderFactory csrBuilderFactory;
 
         public CertesMiddleware(
             RequestDelegate next,
             IOptions<CertesOptions> optionsAccessor,
             ILoggerFactory loggerFactory,
+            IContextStore contextStore,
+            IChallengeResponderFactory challengeResponderFactory,
+            ICsrBuilderFactory csrBuilderFactory,
             ISslBindingManager bindingManager)
         {
             this.next = next;
             this.logger = loggerFactory.CreateLogger<CertesMiddleware>();
             this.options = optionsAccessor.Value;
             this.bindingManager = bindingManager;
+            this.contextStore = contextStore;
+            this.challengeResponderFactory = challengeResponderFactory;
+            this.csrBuilderFactory = csrBuilderFactory;
         }
 
         public async Task Invoke(HttpContext context)
@@ -41,12 +51,151 @@ namespace Certes.Azure
                 return;
             }
 
-            // 2.   Get reg data
-            // 2.1  New reg
-            // 3.   Check authz status
-            // 4.   Do authz
-            // 5.   Do cert
+            var account = await this.contextStore.GetAccount();
+
+            using (var client = new AcmeClient(options.DirectoryUri))
+            {
+                if (account == null)
+                {
+                    account = await client.NewRegistraton(); // TODO: add optional contact method
+                    await this.contextStore.SetAccount(account);
+                }
+                else
+                {
+                    client.Use(account.Key);
+                }
+
+                foreach (var bindingGroup in bindingGroups)
+                {
+                    var authzChallenges = await GetChallenges(client, bindingGroup);
+
+                    if (authzChallenges.Any(c => c.Item2 == null))
+                    {
+                        // There's at least one authz we can not complete, discard all authz in current group
+                        foreach (var authz in authzChallenges.Select(c => c.Item1))
+                        {
+                            await client.CompleteChallenge(authz.Data.Challenges.First());
+                        }
+                        
+                        continue;
+                    }
+                    else
+                    {
+                        foreach (var authz in authzChallenges)
+                        {
+                            foreach (var challenge in authz.Item2)
+                            {
+                                // Make sure the key authz string is ready
+                                challenge.KeyAuthorization = client.ComputeKeyAuthorization(challenge);
+
+                                var responder = this.challengeResponderFactory.GetResponder(challenge.Type);
+                                await responder.Deploy(challenge);
+                            }
+                        }
+
+                        // TODO: Maybe an optional delay to avoid caching issues?
+                        
+                        foreach (var challenge in authzChallenges.SelectMany(a => a.Item2))
+                        {
+                            await client.CompleteChallenge(challenge);
+                        }
+
+                        var authzFailed = false;
+                        var pendingAuthz = authzChallenges.Select(a => a.Item1).ToList();
+                        while (pendingAuthz.Count > 0 && !authzFailed)
+                        {
+                            await Task.Delay(5000); // TODO: make configurable
+                            var links = pendingAuthz.Select(a => a.Location);
+                            pendingAuthz.Clear();
+                            foreach (var link in links)
+                            {
+                                var authz = await client.GetAuthorization(link);
+                                await this.contextStore.SetAuthorization(authz);
+                                
+                                if (authz.Data.Status == EntityStatus.Pending)
+                                {
+
+                                }
+                                else if (authz.Data.Status != EntityStatus.Valid)
+                                {
+                                    authzFailed = true;
+                                }
+                            }
+                        }
+
+                        if (authzFailed)
+                        {
+                            // Failed, try next group
+                            continue;
+                        }
+
+                    }
+
+                    var hostNames = bindingGroup.Select(g => g.HostName).ToArray();
+
+                    // Authorization done, start generating certificate
+                    var csr = this.csrBuilderFactory.Create();
+                    csr.AddName("CN", hostNames.First());
+                    foreach (var altName in hostNames.Skip(1))
+                    {
+                        csr.SubjectAlternativeNames.Add(altName);
+                    }
+
+                    var cert = await client.NewCertificate(csr);
+
+                    var password = Guid.NewGuid().ToString("N"); // TODO: make configurable
+                    var pfx = cert.ToPfx().Build($"certes-{Guid.NewGuid().ToString("N")}", password);
+                    
+                    var thumbprint = cert.GetThumbprint();
+                    await bindingManager.InstallCertificate(thumbprint, pfx, password);
+                    await bindingManager.UpdateSslBindings(thumbprint, hostNames);
+                }
+            }
             await next.Invoke(context);
+        }
+
+        private async Task<List<Tuple<AcmeResult<Authorization>, Challenge[]>>> GetChallenges(
+            AcmeClient client, IList<SslBinding> bindingGroup)
+        {
+            var authzChallenges = new List<Tuple<AcmeResult<Authorization>, Challenge[]>>();
+
+            foreach (var binding in bindingGroup)
+            {
+                var id = new AuthorizationIdentifier
+                {
+                    Type = AuthorizationIdentifierTypes.Dns,
+                    Value = binding.HostName
+                };
+
+                var authz = await this.contextStore.GetAuthorization(id);
+
+                if (authz?.Data?.Status == EntityStatus.Pending)
+                {
+                    authz = await client.GetAuthorization(authz.Location);
+                    await this.contextStore.SetAuthorization(authz);
+                }
+
+                if (authz?.Data?.Status == EntityStatus.Valid && authz?.Data?.Expires < DateTimeOffset.Now.AddHours(-1))
+                {
+                    // Host name has valid authz
+                }
+                else
+                {
+                    authz = await client.NewAuthorization(id);
+                    await this.contextStore.SetAuthorization(authz);
+
+                    var challenges = authz.Data.Combinations
+                        .Where(combination => !combination
+                            .Select(i => authz.Data.Challenges[i])
+                            .Any(c => !this.challengeResponderFactory.IsSupported(c.Type)))
+                        .Select(combination => combination.Select(i => authz.Data.Challenges[i]).ToArray())
+                        .FirstOrDefault();
+
+                    authzChallenges.Add(Tuple.Create(authz, challenges));
+                }
+            }
+
+            return authzChallenges;
         }
 
         private async Task<IList<IList<SslBinding>>> CheckCertificates()
@@ -81,7 +230,7 @@ namespace Certes.Azure
             {
                 sub.UseMiddleware<CertesMiddleware>();
             });
-            
+
             return app;
         }
 

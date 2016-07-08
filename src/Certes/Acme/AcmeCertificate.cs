@@ -1,4 +1,5 @@
 ﻿using Certes.Pkcs;
+using Org.BouncyCastle.Crypto.Digests;
 using System;
 
 namespace Certes.Acme
@@ -52,6 +53,31 @@ namespace Certes.Acme
             }
 
             return pfxBuilder;
+        }
+
+        /// <summary>
+        /// Gets the thumbprint for <paramref name="cert"/>.
+        /// </summary>
+        /// <param name="cert">The cert.</param>
+        /// <returns></returns>
+        /// <exception cref="System.Exception">If the certificate data is missing.</exception>
+        public static string GetThumbprint(this AcmeCertificate cert)
+        {
+            if (cert?.Raw == null)
+            {
+                throw new Exception($"Certificate data missing, please fetch the certificate from ${cert.Location}");
+            }
+
+            var data = cert.Raw;
+
+            var sha1 = new Sha1Digest();
+            var hashed = new byte[sha1.GetDigestSize()];
+
+            sha1.BlockUpdate(data, 0, data.Length);
+            sha1.DoFinal(hashed, 0);
+
+
+            return BitConverter.ToString(hashed).Replace("-", "");
         }
     }
 }
