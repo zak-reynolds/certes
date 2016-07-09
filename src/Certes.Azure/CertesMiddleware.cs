@@ -148,6 +148,7 @@ namespace Certes.Azure
                     await bindingManager.UpdateSslBindings(thumbprint, hostNames);
                 }
             }
+
             await next.Invoke(context);
         }
 

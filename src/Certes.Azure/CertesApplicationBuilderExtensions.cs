@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace Certes.Azure
 {
-
     public static class CertesApplicationBuilderExtensions
     {
         private const string WebJobFilePrefix = "Certes.Azure.Resources.WebJob.";
@@ -24,10 +23,11 @@ namespace Certes.Azure
             return app;
         }
 
-        public static IApplicationBuilder UseCertesChallengeHandler(this IApplicationBuilder app)
+        public static IApplicationBuilder UseCertesChallengeResponder(this IApplicationBuilder app)
         {
             app.Map("/.well-known/acme-challenge", sub =>
             {
+                sub.UseMiddleware<CertesHttpChallengeResponderMiddleware>();
             });
 
             return app;
