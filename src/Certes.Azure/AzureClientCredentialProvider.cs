@@ -1,13 +1,10 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Certes.Azure
 {
-
     public class AzureClientCredentialProvider : IAzureClientCredentialProvider
     {
         private readonly AzureManagementClientOptions options;
@@ -29,10 +26,5 @@ namespace Certes.Azure
 
             return token.AccessToken;
         }
-    }
-
-    public interface IAzureClientCredentialProvider
-    {
-        Task<string> GetOrCreateAccessToken();
     }
 }

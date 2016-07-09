@@ -12,6 +12,8 @@ namespace Certes.Azure
 
         public static CertesBuilder AddCertes(this IServiceCollection services, Action<CertesOptions> setupAction)
         {
+            services.AddScoped<IChallengeResponderFactory, ChallengeResponderFactory>();
+
             if (setupAction != null)
             {
                 services.Configure(setupAction);

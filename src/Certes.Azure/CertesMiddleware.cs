@@ -1,15 +1,10 @@
 ﻿using Certes.Acme;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Certes.Azure
@@ -185,14 +180,18 @@ namespace Certes.Azure
                 {
                     authz = await client.NewAuthorization(id);
                     await this.contextStore.SetAuthorization(authz);
-
+                    
                     var challenges = authz.Data.Combinations
-                        .Where(combination => !combination
-                            .Select(i => authz.Data.Challenges[i])
-                            .Any(c => this.challengeResponderFactory.IsSupported(c.Type)))
-                        .Select(combination => combination.Select(i => authz.Data.Challenges[i]).ToArray())
+                        .Select(combination => combination.Select(i => authz.Data.Challenges[i]))
+                        .Select(combination => combination.Select(c => new
+                        {
+                            Challenge = c,
+                            Responder = this.challengeResponderFactory.GetResponder(c.Type)
+                        }))
+                        .Where(combination => combination.All(c => c.Responder != null))
+                        .Select(combination => combination.Select(c => c.Challenge).ToArray())
                         .FirstOrDefault();
-
+                    
                     authzChallenges.Add(Tuple.Create(authz, challenges));
                 }
             }
@@ -219,61 +218,6 @@ namespace Certes.Azure
                 .Where(g => g.Any(b => b.CertificateThumbprint == null || b.CertificateExpires <= renewDate));
 
             return bindingGroup.Select(b => b.ToArray()).ToArray();
-        }
-    }
-
-    public static class CertesExtensions
-    {
-        private const string WebJobFilePrefix = "Certes.Azure.Resources.WebJob.";
-
-        public static IApplicationBuilder UseCertes(this IApplicationBuilder app)
-        {
-            app.Map("/.certes/renew", sub =>
-            {
-                sub.UseMiddleware<CertesMiddleware>();
-            });
-
-            return app;
-        }
-
-        public static IApplicationBuilder UseCertesChallengeHandler(this IApplicationBuilder app)
-        {
-            app.Map("/.well-known/acme-challenge", sub =>
-            {
-            });
-
-            return app;
-        }
-
-        public static IApplicationBuilder UseCertesWebJob(this IApplicationBuilder app)
-        {
-            var env = app.ApplicationServices.GetRequiredService<IHostingEnvironment>();
-            var webJobPath = Path.Combine(env.ContentRootPath, "app_data/jobs/triggered/certes");
-
-            var dir = new DirectoryInfo(webJobPath);
-            if (!dir.Exists)
-            {
-                dir.Create();
-            }
-
-            var assembly = typeof(CertesMiddleware).GetTypeInfo().Assembly;
-            var webJobFiles = assembly
-                .GetManifestResourceNames()
-                .Where(n => n.StartsWith(WebJobFilePrefix))
-                .ToArray();
-
-            foreach (var file in webJobFiles)
-            {
-                var filename = file.Substring(WebJobFilePrefix.Length);
-                var dest = Path.Combine(webJobPath, filename);
-                using (var destStream = File.Create(dest))
-                using (var srcStream = assembly.GetManifestResourceStream(file))
-                {
-                    srcStream.CopyTo(destStream);
-                }
-            }
-
-            return app;
         }
     }
 }

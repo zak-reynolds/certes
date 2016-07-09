@@ -1,0 +1,9 @@
+﻿namespace Certes.Azure
+{
+    public class AzureManagementClientOptions
+    {
+        public string TenantId { get; set; }
+        public string ClientId { get; set; }
+        public string ClientSecret { get; set; }
+    }
+}
