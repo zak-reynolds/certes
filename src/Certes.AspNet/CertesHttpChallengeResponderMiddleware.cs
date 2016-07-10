@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Certes.Azure
+namespace Certes.AspNet
 {
     public class CertesHttpChallengeResponderMiddleware
     {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Certes.Azure
+namespace Certes.AspNet
 {
     public interface ISslBindingManager
     {

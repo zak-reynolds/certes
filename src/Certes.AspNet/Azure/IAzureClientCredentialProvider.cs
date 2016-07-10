@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Certes.Azure
+namespace Certes.AspNet.Azure
 {
     public interface IAzureClientCredentialProvider
     {

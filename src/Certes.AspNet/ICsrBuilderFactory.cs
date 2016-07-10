@@ -1,6 +1,6 @@
 ﻿using Certes.Pkcs;
 
-namespace Certes.Azure
+namespace Certes.AspNet
 {
     public interface ICsrBuilderFactory
     {

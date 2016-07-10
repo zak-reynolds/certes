@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Certes.AspNet;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace Certes.Azure
+namespace Certes
 {
     public static class CertesApplicationBuilderExtensions
     {
@@ -23,7 +24,7 @@ namespace Certes.Azure
             return app;
         }
 
-        public static IApplicationBuilder UseCertesChallengeResponder(this IApplicationBuilder app)
+        public static IApplicationBuilder UseCertesHttpChallengeResponder(this IApplicationBuilder app)
         {
             app.Map("/.well-known/acme-challenge", sub =>
             {

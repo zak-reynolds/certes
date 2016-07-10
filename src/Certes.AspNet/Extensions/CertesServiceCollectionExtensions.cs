@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Certes.AspNet;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 
-namespace Certes.Azure
+namespace Certes
 {
     public static class CertesServiceCollectionExtensions
     {
@@ -13,6 +14,8 @@ namespace Certes.Azure
         public static CertesBuilder AddCertes(this IServiceCollection services, Action<CertesOptions> setupAction)
         {
             services.AddScoped<IChallengeResponderFactory, ChallengeResponderFactory>();
+            services.AddScoped<ICsrBuilderFactory, CsrBuilderFactory>();
+            services.AddScoped<IContextStore, InMemoryContextStore>();
 
             if (setupAction != null)
             {

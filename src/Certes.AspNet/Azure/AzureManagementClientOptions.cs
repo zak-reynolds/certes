@@ -1,4 +1,4 @@
-﻿namespace Certes.Azure
+﻿namespace Certes.AspNet.Azure
 {
     public class AzureManagementClientOptions
     {

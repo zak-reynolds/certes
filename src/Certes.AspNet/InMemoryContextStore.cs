@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
-namespace Certes.Azure
+namespace Certes.AspNet
 {
     public class InMemoryContextStore : IContextStore
     {

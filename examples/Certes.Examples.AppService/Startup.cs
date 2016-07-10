@@ -1,5 +1,4 @@
-﻿using Certes.Azure;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,7 +25,9 @@ namespace Certes.Examples.AppService
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseCertesWebJobScheduler();
+            app.UseCertes()
+                .UseCertesHttpChallengeResponder()
+                .UseCertesWebJobScheduler();
 
             app.Run(async (context) =>
             {

@@ -16,7 +16,7 @@
     "Moq": "4.6.25-alpha",
     "System.Diagnostics.TraceSource": "4.0.0",
     "Portable.BouncyCastle": "1.8.1.1",
-    "Certes.Azure": "1.0.0-*",
+    "Certes.AspNet": "1.0.0-*",
     "Microsoft.Extensions.Configuration": "1.0.0",
     "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0",
     "Microsoft.Extensions.Configuration.UserSecrets": "1.0.0",

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Certes.Azure
+namespace Certes.AspNet
 {
     public class SslBinding
     {

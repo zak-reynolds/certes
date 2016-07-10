@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Certes.Azure
+namespace Certes.AspNet
 {
     public class CertesOptions
     {

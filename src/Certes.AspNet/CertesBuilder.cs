@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace Certes.Azure
+namespace Certes.AspNet
 {
     public class CertesBuilder
     {

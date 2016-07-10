@@ -3,7 +3,7 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System;
 using System.Threading.Tasks;
 
-namespace Certes.Azure
+namespace Certes.AspNet.Azure
 {
     public class AzureClientCredentialProvider : IAzureClientCredentialProvider
     {

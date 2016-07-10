@@ -1,7 +1,7 @@
 ﻿using Certes.Acme;
 using System.Threading.Tasks;
 
-namespace Certes.Azure
+namespace Certes.AspNet
 {
     public interface IChallengeResponder
     {
