@@ -20,6 +20,7 @@ namespace Certes.Examples.AppService
 
             if (env.IsDevelopment())
             {
+                builder.AddApplicationInsightsSettings(developerMode: true);
                 builder.AddUserSecrets();
             }
 
@@ -29,6 +30,8 @@ namespace Certes.Examples.AppService
         
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddApplicationInsightsTelemetry(Configuration);
+
             services.AddCertes(certes =>
             {
                 var config = Configuration.GetSection("certes");
@@ -48,6 +51,8 @@ namespace Certes.Examples.AppService
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseApplicationInsightsRequestTelemetry();
+
             app.UseCertes()
                 .UseCertesHttpChallengeResponder()
                 .UseCertesWebJobScheduler();
@@ -56,6 +61,8 @@ namespace Certes.Examples.AppService
             {
                 await context.Response.WriteAsync("Hello World!");
             });
+
+            app.UseApplicationInsightsExceptionTelemetry();
         }
     }
 }
