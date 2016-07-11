@@ -39,10 +39,14 @@ namespace Certes.AspNet
 
         public async Task Invoke(HttpContext context)
         {
+            logger.LogDebug("Start renewing SSL certificates.");
+
             var bindingGroups = await CheckCertificates();
             if (bindingGroups.Count == 0)
             {
                 // All host names have valid SSL
+                logger.LogDebug("All host names have valid SSL bindings.");
+
                 return;
             }
 
@@ -50,8 +54,11 @@ namespace Certes.AspNet
 
             using (var client = new AcmeClient(options.DirectoryUri))
             {
+                logger.LogDebug("Using ACME server {0}.", options.DirectoryUri);
+
                 if (account == null)
                 {
+                    logger.LogDebug("No ACME account configured, register new account.");
                     account = await client.NewRegistraton(); // TODO: add optional contact method
                     account.Data.Agreement = account.GetTermsOfServiceUri();
                     await client.UpdateRegistration(account);
@@ -59,15 +66,19 @@ namespace Certes.AspNet
                 }
                 else
                 {
+                    logger.LogDebug("Using existing ACME account.");
                     client.Use(account.Key);
                 }
 
+                logger.LogDebug("Renewing {0} certificates.", bindingGroups.Count);
                 foreach (var bindingGroup in bindingGroups)
                 {
+                    logger.LogDebug("Start renewing certificate.");
                     var authzChallenges = await GetChallenges(client, bindingGroup);
 
                     if (authzChallenges.Any(c => c.Item2 == null))
                     {
+                        logger.LogDebug("Discard pending authorizations.");
                         // There's at least one authz we can not complete, discard all authz in current group
                         foreach (var authz in authzChallenges.Select(c => c.Item1))
                         {
@@ -85,6 +96,7 @@ namespace Certes.AspNet
                                 // Make sure the key authz string is ready
                                 challenge.KeyAuthorization = client.ComputeKeyAuthorization(challenge);
 
+                                logger.LogDebug("Deploy {0} responder for {1}.", challenge.Type, authz.Item1.Data.Identifier.Value);
                                 var responder = await this.challengeResponderFactory.GetResponder(challenge.Type);
                                 await responder.Deploy(challenge);
                             }
@@ -92,9 +104,13 @@ namespace Certes.AspNet
 
                         // TODO: Maybe an optional delay to avoid caching issues?
                         
-                        foreach (var challenge in authzChallenges.SelectMany(a => a.Item2))
+                        foreach (var authz in authzChallenges)
                         {
-                            await client.CompleteChallenge(challenge);
+                            foreach (var challenge in authz.Item2)
+                            {
+                                logger.LogDebug("Submit {0} challenge for {1}.", challenge.Type, authz.Item1.Data.Identifier.Value);
+                                await client.CompleteChallenge(challenge);
+                            }
                         }
 
                         var authzFailed = false;
@@ -109,12 +125,13 @@ namespace Certes.AspNet
                                 var authz = await client.GetAuthorization(link);
                                 await this.contextStore.SetAuthorization(authz);
                                 
-                                if (authz.Data.Status == EntityStatus.Pending)
+                                if (authz.Data.Status == EntityStatus.Pending || authz.Data.Status == EntityStatus.Processing)
                                 {
 
                                 }
                                 else if (authz.Data.Status != EntityStatus.Valid)
                                 {
+                                    logger.LogWarning("Authorization failed for {0}.", authz.Data.Identifier.Value);
                                     authzFailed = true;
                                 }
                             }
@@ -124,6 +141,8 @@ namespace Certes.AspNet
                         {
                             foreach (var challenge in authz.Item2)
                             {
+                                logger.LogDebug("Remote {0} responder for {1}.", challenge.Type, authz.Item1.Data.Identifier.Value);
+
                                 var responder = await this.challengeResponderFactory.GetResponder(challenge.Type);
                                 await responder.Remove(challenge);
                             }
@@ -131,10 +150,10 @@ namespace Certes.AspNet
 
                         if (authzFailed)
                         {
+                            logger.LogWarning("Fail to renew certificate.");
                             // Failed, try next group
                             continue;
                         }
-
                     }
 
                     var hostNames = bindingGroup.Select(g => g.HostName).ToArray();
@@ -147,16 +166,21 @@ namespace Certes.AspNet
                         csr.SubjectAlternativeNames.Add(altName);
                     }
 
+                    logger.LogDebug("Submiting CSR - CN={0}, with {1} SAN.", hostNames.First(), hostNames.Count() - 1);
                     var cert = await client.NewCertificate(csr);
 
                     // TODO: check if the cert contains all the requested host names
 
                     var thumbprint = cert.GetThumbprint();
+                    logger.LogDebug("Certificate generated {0}.", thumbprint);
                     var password = Guid.NewGuid().ToString("N"); // TODO: make configurable
                     var pfx = cert.ToPfx().Build($"certes-{thumbprint}", password);
-                    
+
+                    logger.LogDebug("Installing certificate {0}.", thumbprint);
                     await bindingManager.InstallCertificate(thumbprint, pfx, password);
                     await bindingManager.UpdateSslBindings(thumbprint, hostNames);
+
+                    logger.LogDebug("Certificate renewed.", thumbprint);
                 }
             }
 
@@ -186,10 +210,11 @@ namespace Certes.AspNet
 
                 if (authz?.Data?.Status == EntityStatus.Valid && authz?.Data?.Expires < DateTimeOffset.Now.AddHours(-1))
                 {
-                    // Host name has valid authz
+                    logger.LogDebug("Authz found for {0}.", id.Value);
                 }
                 else
                 {
+                    logger.LogDebug("Creating authz for {0}.", id.Value);
                     authz = await client.NewAuthorization(id);
                     await this.contextStore.SetAuthorization(authz);
                     
@@ -204,6 +229,17 @@ namespace Certes.AspNet
                         .Select(combination => combination.Select(c => c.Challenge).ToArray())
                         .FirstOrDefault();
                     
+                    if (challenges == null)
+                    {
+                        var challengesRequired = string.Join(", ", 
+                            authz.Data.Combinations.Select(
+                                combination => "[" + string.Join(", ", 
+                                    combination.Select(i => "[" + authz.Data.Challenges[i].Type + "]")) +
+                                    "]"));
+
+                        logger.LogWarning("Can not complete authz for {0}. Require {1}", id.Value, challengesRequired);
+                    }
+
                     authzChallenges.Add(Tuple.Create(authz, challenges));
                 }
             }

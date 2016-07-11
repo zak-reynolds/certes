@@ -10,7 +10,8 @@
     "Microsoft.Extensions.Configuration.UserSecrets": "1.0.0",
     "Microsoft.ApplicationInsights.AspNetCore": "1.0.0",
     "NLog": "4.4.0-beta13",
-    "Microsoft.ApplicationInsights.NLogTarget": "2.1.0"
+    "Microsoft.ApplicationInsights.NLogTarget": "2.1.0",
+    "NLog.Extensions.Logging": "1.0.0-rtm-alpha2"
   },
 
   "tools": {
@@ -35,7 +36,9 @@
   "publishOptions": {
     "include": [
       "wwwroot",
-      "web.config"
+      "appsettings.json",
+      "web.config",
+      "nlog.config"
     ]
   },
 

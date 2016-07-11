@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 
 namespace Certes.Examples.AppService
 {
@@ -43,10 +44,12 @@ namespace Certes.Examples.AppService
         
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole();
+            loggerFactory.AddNLog();
+            env.ConfigureNLog("nlog.config");
 
             if (env.IsDevelopment())
             {
+                loggerFactory.AddConsole();
                 app.UseDeveloperExceptionPage();
             }
 
