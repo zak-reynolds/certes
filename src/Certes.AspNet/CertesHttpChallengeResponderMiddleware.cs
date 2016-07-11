@@ -1,8 +1,6 @@
 ﻿using Certes.Acme;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Certes.AspNet
@@ -11,20 +9,16 @@ namespace Certes.AspNet
     {
         private readonly RequestDelegate next;
         private readonly ILogger logger;
-        private readonly IContextStore contextStore;
+        private readonly IHttpChallengeResponder challengeResponder;
 
         public CertesHttpChallengeResponderMiddleware(
             RequestDelegate next,
-            IOptions<CertesOptions> optionsAccessor,
             ILoggerFactory loggerFactory,
-            IContextStore contextStore,
-            IChallengeResponderFactory challengeResponderFactory,
-            ICsrBuilderFactory csrBuilderFactory,
-            ISslBindingManager bindingManager)
+            IHttpChallengeResponder challengeResponder)
         {
             this.next = next;
             this.logger = loggerFactory.CreateLogger<CertesMiddleware>();
-            this.contextStore = contextStore;
+            this.challengeResponder = challengeResponder;
         }
 
         public async Task Invoke(HttpContext context)
@@ -41,11 +35,7 @@ namespace Certes.AspNet
                     Value = host
                 };
 
-                var authz = await this.contextStore.GetAuthorization(authzId);
-                var keyAuthz = authz?.Data?.Challenges?
-                    .Where(c => c.Type == ChallengeTypes.Http01 && c.Token == token)
-                    .Select(c => c.KeyAuthorization)
-                    .FirstOrDefault();
+                var keyAuthz = await this.challengeResponder.GetKeyAuthorizationString(token);
 
                 if (keyAuthz != null)
                 {

@@ -53,6 +53,8 @@ namespace Certes.AspNet
                 if (account == null)
                 {
                     account = await client.NewRegistraton(); // TODO: add optional contact method
+                    account.Data.Agreement = account.GetTermsOfServiceUri();
+                    await client.UpdateRegistration(account);
                     await this.contextStore.SetAccount(account);
                 }
                 else
@@ -115,6 +117,15 @@ namespace Certes.AspNet
                                 {
                                     authzFailed = true;
                                 }
+                            }
+                        }
+                        
+                        foreach (var authz in authzChallenges)
+                        {
+                            foreach (var challenge in authz.Item2)
+                            {
+                                var responder = await this.challengeResponderFactory.GetResponder(challenge.Type);
+                                await responder.Remove(challenge);
                             }
                         }
 

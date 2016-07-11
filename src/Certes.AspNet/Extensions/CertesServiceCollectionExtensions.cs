@@ -10,7 +10,6 @@ namespace Certes
         {
             services.AddScoped<IChallengeResponderFactory, ChallengeResponderFactory>();
             services.AddScoped<ICsrBuilderFactory, CsrBuilderFactory>();
-            services.AddScoped<IContextStore, InMemoryContextStore>();
 
             var builder = new CertesOptionsBuilder(services);
 

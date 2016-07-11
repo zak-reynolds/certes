@@ -7,5 +7,6 @@ namespace Certes.AspNet
     {
         string ChallengeType { get; }
         Task Deploy(Challenge challenge);
+        Task Remove(Challenge challenge);
     }
 }

@@ -42,8 +42,10 @@ namespace Certes
             return builder;
         }
 
-        public static CertesOptionsBuilder AddHttpChallengeResponder(this CertesOptionsBuilder builder)
+        public static CertesOptionsBuilder AddInMemoryProviders(this CertesOptionsBuilder builder)
         {
+            builder.Services.AddScoped<IContextStore, InMemoryContextStore>();
+            builder.Services.AddScoped<IHttpChallengeResponder, InMemoryHttpChallengeResponder>();
             return builder;
         }
     }

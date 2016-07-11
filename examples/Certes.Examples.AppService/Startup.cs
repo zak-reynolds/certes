@@ -33,9 +33,9 @@ namespace Certes.Examples.AppService
             {
                 var config = Configuration.GetSection("certes");
                 certes
+                    .AddInMemoryProviders()
                     .UseServicePrincipal(config["tenantId"], config["clientId"], config["clientSecret"])
-                    .ForWebApp(config["subscriptionId"], config["resourceGroup"], config["name"])
-                    .AddHttpChallengeResponder();
+                    .ForWebApp(config["subscriptionId"], config["resourceGroup"], config["name"]);
             });
         }
         
