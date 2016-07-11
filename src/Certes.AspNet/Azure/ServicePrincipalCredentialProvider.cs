@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 
 namespace Certes.AspNet.Azure
 {
-    public class AzureClientCredentialProvider : IAzureClientCredentialProvider
+    public class ServicePrincipalCredentialProvider : IClientCredentialProvider
     {
-        private readonly AzureManagementClientOptions options;
+        private readonly ServicePrincipalOptions options;
         private AuthenticationResult token;
 
-        public AzureClientCredentialProvider(IOptions<AzureManagementClientOptions> options)
+        public ServicePrincipalCredentialProvider(IOptions<ServicePrincipalOptions> options)
         {
             this.options = options.Value;
         }

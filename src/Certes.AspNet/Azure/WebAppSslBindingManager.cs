@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace Certes.AspNet.Azure
 {
-    public class AzureWebAppSslBindingManager : ISslBindingManager
+    public class WebAppSslBindingManager : ISslBindingManager
     {
-        private readonly IAzureClientCredentialProvider accessTokenProvider;
-        private readonly AzureWebAppOptions options;
+        private readonly IClientCredentialProvider accessTokenProvider;
+        private readonly WebAppOptions options;
 
-        public AzureWebAppSslBindingManager(IOptions<AzureWebAppOptions> options, IAzureClientCredentialProvider accessTokenProvider)
+        public WebAppSslBindingManager(IOptions<WebAppOptions> options, IClientCredentialProvider accessTokenProvider)
         {
             this.options = options.Value;
             this.accessTokenProvider = accessTokenProvider;

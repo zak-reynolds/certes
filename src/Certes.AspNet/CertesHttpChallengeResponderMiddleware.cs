@@ -51,6 +51,7 @@ namespace Certes.AspNet
                 {
                     context.Response.ContentType = "plain/text";
                     await context.Response.WriteAsync(keyAuthz);
+                    return;
                 }
             }
 

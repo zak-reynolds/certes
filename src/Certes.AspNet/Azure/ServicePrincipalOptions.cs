@@ -1,6 +1,6 @@
 ﻿namespace Certes.AspNet.Azure
 {
-    public class AzureManagementClientOptions
+    public class ServicePrincipalOptions
     {
         public string TenantId { get; set; }
         public string ClientId { get; set; }

@@ -18,16 +18,16 @@ namespace Certes.AspNet
             
             var services = new ServiceCollection();
             services.AddOptions();
-            services.Configure<AzureManagementClientOptions>(config.GetSection("certes"));
-            services.Configure<AzureWebAppOptions>(config.GetSection("certes"));
+            services.Configure<ServicePrincipalOptions>(config.GetSection("certes"));
+            services.Configure<WebAppOptions>(config.GetSection("certes"));
 
-            services.AddTransient<IAzureClientCredentialProvider, AzureClientCredentialProvider>();
-            services.AddTransient<ISslBindingManager, AzureWebAppSslBindingManager>();
+            services.AddTransient<IClientCredentialProvider, ServicePrincipalCredentialProvider>();
+            services.AddTransient<ISslBindingManager, WebAppSslBindingManager>();
 
             var serviceProvider = services.BuildServiceProvider();
             
             var mgr = serviceProvider.GetRequiredService<ISslBindingManager>();
-            Assert.IsType<AzureWebAppSslBindingManager>(mgr);
+            Assert.IsType<WebAppSslBindingManager>(mgr);
             await mgr.GetHostNames();
         }
     }

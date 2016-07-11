@@ -2,7 +2,7 @@
 
 namespace Certes.AspNet.Azure
 {
-    public interface IAzureClientCredentialProvider
+    public interface IClientCredentialProvider
     {
         Task<string> GetOrCreateAccessToken();
     }

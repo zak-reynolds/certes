@@ -6,23 +6,17 @@ namespace Certes
 {
     public static class CertesServiceCollectionExtensions
     {
-        public static CertesBuilder AddCertes(this IServiceCollection services)
-        {
-            return services.AddCertes(setupAction: null);
-        }
-
-        public static CertesBuilder AddCertes(this IServiceCollection services, Action<CertesOptions> setupAction)
+        public static IServiceCollection AddCertes(this IServiceCollection services, Action<CertesOptionsBuilder> setupAction)
         {
             services.AddScoped<IChallengeResponderFactory, ChallengeResponderFactory>();
             services.AddScoped<ICsrBuilderFactory, CsrBuilderFactory>();
             services.AddScoped<IContextStore, InMemoryContextStore>();
 
-            if (setupAction != null)
-            {
-                services.Configure(setupAction);
-            }
+            var builder = new CertesOptionsBuilder(services);
 
-            return new CertesBuilder(services);
+            setupAction?.Invoke(builder);
+            
+            return services;
         }
     }
 }
