@@ -13,6 +13,7 @@
     "Microsoft.IdentityModel.Clients.ActiveDirectory": "3.11.305310302-alpha",
     "Microsoft.AspNetCore.Hosting.Abstractions": "1.0.0",
     "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0",
     "System.Linq": "4.1.0"
   },
 

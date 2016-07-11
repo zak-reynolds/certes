@@ -225,7 +225,7 @@ namespace Certes.AspNet
                 .GroupBy(g => g.Group, g => g.Binding);
 
             // Renew only if no cert, or the cert is about to expire
-            var renewDate = DateTimeOffset.Now.Add(options.RenewBeforeExpire);
+            var renewDate = DateTimeOffset.Now.AddDays(options.RenewBeforeDays);
             bindingGroup = bindingGroup
                 .Where(g => g.Any(b => b.CertificateThumbprint == null || b.CertificateExpires <= renewDate));
 

@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Certes.AspNet
+namespace Certes.AspNet.Azure
 {
     public class AzureWebAppSslBindingManagerTests
     {
@@ -18,8 +18,8 @@ namespace Certes.AspNet
             
             var services = new ServiceCollection();
             services.AddOptions();
-            services.Configure<ServicePrincipalOptions>(config.GetSection("certes"));
-            services.Configure<WebAppOptions>(config.GetSection("certes"));
+            services.Configure<ServicePrincipalOptions>(config.GetSection("certes:azure:servicePrincipal"));
+            services.Configure<WebAppOptions>(config.GetSection("certes:azure:webApp"));
 
             services.AddTransient<IClientCredentialProvider, ServicePrincipalCredentialProvider>();
             services.AddTransient<ISslBindingManager, WebAppSslBindingManager>();

@@ -31,14 +31,13 @@ namespace Certes.Examples.AppService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddApplicationInsightsTelemetry(Configuration);
-
+            
             services.AddCertes(certes =>
             {
-                var config = Configuration.GetSection("certes");
                 certes
                     .AddInMemoryProviders()
-                    .UseServicePrincipal(config["tenantId"], config["clientId"], config["clientSecret"])
-                    .ForWebApp(config["subscriptionId"], config["resourceGroup"], config["name"]);
+                    .UseConfiguration(this.Configuration)
+                    .UseAzureConfiguration(this.Configuration);
             });
         }
         

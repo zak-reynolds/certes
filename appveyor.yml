@@ -21,16 +21,16 @@ assembly_info:
   assembly_version: "1.0"
 
 environment:
-  certes__tenantId:
+  certes__azure__servicePrincipal__tenantId:
     secure: 4FrR9+ARA8H+bLFFQDT4C1TAZv/LTO69vFpfjpqR5BVTedqgsZcey6xuS2TDA46l
-  certes__clientId:
+  certes__azure__servicePrincipal__clientId:
     secure: s0tJTf4OqtsG0ze5ZL0g4kWcVw3oMnNiaepf0cwkh1U1s214jf1AdwGuFss2y7q7
-  certes__clientSecret:
+  certes__azure__servicePrincipal__clientSecret:
     secure: IObP5jhbKBiEWg08kGjDNYhUBkOJw++2W3KqjsJT4t+16l5+dPxcTN4Pj4WSXJNC
-  certes__subscriptionId:
+  certes__azure__webApp__subscriptionId:
     secure: FSK01SfyZI0x6AX2XVDxcE6kUAmg4fYja2hsNcQNBxa1PBddSZtZ8rthvO5c8o/R
-  certes__resourceGroup: certes
-  certes__name: certes
+  certes__azure__webApp__resourceGroup: certes
+  certes__azure__webApp__name: certes
 
 init:
   - git config --global core.autocrlf input
