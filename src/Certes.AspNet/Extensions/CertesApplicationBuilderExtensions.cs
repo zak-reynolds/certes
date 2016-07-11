@@ -11,7 +11,7 @@ namespace Certes
 {
     public static class CertesApplicationBuilderExtensions
     {
-        private const string WebJobFilePrefix = "Certes.Azure.Resources.WebJob.";
+        private const string WebJobFilePrefix = "Resources.WebJob.";
         private static Task webJobDeploymentTask;
 
         public static IApplicationBuilder UseCertes(this IApplicationBuilder app)
@@ -57,14 +57,15 @@ namespace Certes
             }
 
             var assembly = typeof(CertesMiddleware).GetTypeInfo().Assembly;
+            var prefix = $"{assembly.GetName().Name}.{WebJobFilePrefix}";
             var webJobFiles = assembly
                 .GetManifestResourceNames()
-                .Where(n => n.StartsWith(WebJobFilePrefix))
+                .Where(n => n.StartsWith(prefix))
                 .ToArray();
-
+            
             foreach (var file in webJobFiles)
             {
-                var filename = file.Substring(WebJobFilePrefix.Length);
+                var filename = file.Substring(prefix.Length);
                 var dest = Path.Combine(webJobPath, filename);
                 using (var destStream = File.Create(dest))
                 using (var srcStream = assembly.GetManifestResourceStream(file))
