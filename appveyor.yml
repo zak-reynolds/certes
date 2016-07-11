@@ -50,20 +50,20 @@ build_script:
   - ps: $packageJson.version = $packageVersion
   - ps: $packageJson.dependencies.Certes = $packageVersion
   - ps: $packageJson | ConvertTo-Json | Set-Content .\src\Certes.Cli\project.json
-  - ps: echo "Update Certes.Azure package version to $($packageVersion)"
-  - ps: $packageJson = Get-Content -Raw .\src\Certes.Azure\project.json | ConvertFrom-Json
+  - ps: echo "Update Certes.AspNet package version to $($packageVersion)"
+  - ps: $packageJson = Get-Content -Raw .\src\Certes.AspNet\project.json | ConvertFrom-Json
   - ps: $packageJson.version = $packageVersion
   - ps: $packageJson.dependencies.Certes = $packageVersion
-  - ps: $packageJson | ConvertTo-Json | Set-Content .\src\Certes.Azure\project.json
+  - ps: $packageJson | ConvertTo-Json | Set-Content .\src\Certes.AspNet\project.json
   - ps: echo "Update dependency versions for Certes.Tests"
   - ps: $packageJson = Get-Content -Raw .\test\Certes.Tests\project.json | ConvertFrom-Json
   - ps: $packageJson.dependencies.Certes = $packageVersion
   - ps: $packageJson.dependencies.'Certes.Cli' = $packageVersion
-  - ps: $packageJson.dependencies.'Certes.Azure' = $packageVersion
+  - ps: $packageJson.dependencies.'Certes.AspNet' = $packageVersion
   - ps: $packageJson | ConvertTo-Json | Set-Content .\test\Certes.Tests\project.json
   - dotnet restore
   - dotnet pack -c release -o ./build/nuget ./src/Certes/project.json
-  - dotnet pack -c release -o ./build/nuget ./src/Certes.Azure/project.json
+  - dotnet pack -c release -o ./build/nuget ./src/Certes.AspNet/project.json
   - dotnet publish -f netcoreapp1.0 -c release -o ./build/cli/bin ./src/Certes.Cli/project.json
   - ps: '"dotnet %~dp0bin/Certes.Cli.dll %* " | Set-Content .\build\cli\certes.bat'
   - 7z a build\certes-cli.zip .\build\cli\*.* -r
@@ -78,7 +78,7 @@ artifacts:
     - path: build\nuget\Certes.$(CERTES_PACKAGE_VERSION).nupkg
       name: nupkg
 
-    - path: build\nuget\Certes.Azure.$(CERTES_PACKAGE_VERSION).nupkg
+    - path: build\nuget\Certes.AspNet.$(CERTES_PACKAGE_VERSION).nupkg
       name: nupkg-azure
       
     - path: build\certes-cli.zip
