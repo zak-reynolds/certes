@@ -17,12 +17,12 @@
   },
 
   "frameworks": {
-    "netstandard1.5": {
+    "netstandard1.4": {
       "dependencies": {
         "System.Linq": "4.1.0"
       }
     },
-    "net461": {
+    "net46": {
       "frameworkAssemblies": {
         "System.Linq": "" 
       }
