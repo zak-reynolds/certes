@@ -30,7 +30,7 @@ namespace Certes.AspNet.Azure
             const string thumbprint = "78a55983b0ad8db1f636c0e4a18d00647abfbee3";
 
             BuildServiceProvider();
-            var pfx = File.ReadAllBytes("./Data/cert.pfx");
+            var pfx = File.ReadAllBytes("./Data/cert.p12");
 
             ISslBindingManager mgr = CreateBindingManager();
             await mgr.InstallCertificate(thumbprint, pfx, password);
