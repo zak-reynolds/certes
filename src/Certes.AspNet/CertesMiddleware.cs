@@ -141,7 +141,7 @@ namespace Certes.AspNet
                         {
                             foreach (var challenge in authz.Item2)
                             {
-                                logger.LogDebug("Remote {0} responder for {1}.", challenge.Type, authz.Item1.Data.Identifier.Value);
+                                logger.LogDebug("Remove {0} responder for {1}.", challenge.Type, authz.Item1.Data.Identifier.Value);
 
                                 var responder = await this.challengeResponderFactory.GetResponder(challenge.Type);
                                 await responder.Remove(challenge);
