@@ -24,8 +24,8 @@ namespace Certes.AspNet.Azure
         {
             using (var client = await CreateClient())
             {
-                var sites = await client.Sites.GetSiteAsync(options.ResourceGroup, options.Name);
-                var bindings = sites.HostNameSslStates
+                var site = await client.Sites.GetSiteAsync(options.ResourceGroup, options.Name);
+                var bindings = site.HostNameSslStates
                     .Where(h => !h.Name.EndsWith(".azurewebsites.net") && !h.Name.EndsWith(".trafficmanager.net"))
                     .Select(h => new SslBinding
                     {
@@ -53,8 +53,10 @@ namespace Certes.AspNet.Azure
         {
             using (var client = await CreateClient())
             {
+                var site = await client.Sites.GetSiteAsync(options.ResourceGroup, options.Name);
                 await client.Certificates.CreateOrUpdateCertificateAsync(options.ResourceGroup, certificateThumbprint, new Certificate
                 {
+                    Location = site.Location,
                     PfxBlob = Convert.ToBase64String(pfxBlob),
                     Password = password
                 });
