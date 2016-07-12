@@ -63,14 +63,22 @@ namespace Certes.AspNet.Azure
             }
         }
 
-        public async Task UpdateSslBindings(string certificateThumbprint, IList<string> hostNames)
+        public async Task UpdateSslBindings(string certificateThumbprint, params string[] hostNames)
         {
             using (var client = await CreateClient())
             {
-                await client.Certificates.CreateOrUpdateCertificateAsync(options.ResourceGroup, certificateThumbprint, new Certificate
+                var site = await client.Sites.GetSiteAsync(options.ResourceGroup, options.Name);
+
+                
+                foreach (var bindingState in site.HostNameSslStates.Where(h => hostNames.Contains(h.Name)))
                 {
-                    HostNames = hostNames
-                });
+                    bindingState.Thumbprint = certificateThumbprint;
+                    bindingState.SslState = SslState.SniEnabled;
+                    bindingState.ToUpdate = true;
+                }
+                
+                await client.Sites.CreateOrUpdateSiteAsync(
+                    options.ResourceGroup, options.Name, site);
             }
         }
 

@@ -7,6 +7,6 @@ namespace Certes.AspNet
     {
         Task<IList<SslBinding>> GetHostNames();
         Task InstallCertificate(string certificateThumbprint, byte[] pfxBlob, string password);
-        Task UpdateSslBindings(string certificateThumbprint, IList<string> hostNames);
+        Task UpdateSslBindings(string certificateThumbprint, params string[] hostNames);
     }
 }

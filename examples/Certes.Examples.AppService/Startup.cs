@@ -60,7 +60,7 @@ namespace Certes.Examples.AppService
 
             app.UseApplicationInsightsRequestTelemetry();
             app.UseApplicationInsightsExceptionTelemetry();
-
+            
             app.UseCertes()
                 .UseCertesHttpChallengeResponder()
                 .UseCertesWebJobScheduler();

@@ -75,8 +75,7 @@ namespace Certes.Acme
 
             sha1.BlockUpdate(data, 0, data.Length);
             sha1.DoFinal(hashed, 0);
-
-
+            
             return BitConverter.ToString(hashed).Replace("-", "");
         }
     }

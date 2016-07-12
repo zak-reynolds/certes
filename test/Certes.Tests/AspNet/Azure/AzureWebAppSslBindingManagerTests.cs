@@ -27,7 +27,7 @@ namespace Certes.AspNet.Azure
         public async Task CanInstallCertificate()
         {
             const string password = "abcd1234";
-            const string thumbprint = "‎f4d123b861e104f03d91767f10e315467620b96d";
+            const string thumbprint = "78a55983b0ad8db1f636c0e4a18d00647abfbee3";
 
             BuildServiceProvider();
             var pfx = File.ReadAllBytes("./Data/cert.pfx");
@@ -39,6 +39,7 @@ namespace Certes.AspNet.Azure
             {
                 var cert = await client.Certificates.GetCertificateAsync(webAppOptions.ResourceGroup, thumbprint);
                 Assert.NotNull(cert);
+
                 await client.Certificates.DeleteCertificateAsync(webAppOptions.ResourceGroup, thumbprint);
             }
         }
