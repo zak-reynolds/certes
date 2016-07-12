@@ -7,12 +7,15 @@
   "dependencies": {
     "Newtonsoft.Json": "9.0.1",
     "Portable.BouncyCastle": "1.8.1.1",
-    "System.Net.Http": "4.1.0",
-    "System.Runtime.InteropServices": "4.1.0"
+    "System.Net.Http": "4.1.0"
   },
   "frameworks": {
-    "netstandard1.3": {},
-    "net461": {}
+    "netstandard1.3": {
+      "dependencies": {
+        "System.Runtime.InteropServices": "4.1.0"
+      }
+    },
+    "net46": {}
   },
   "buildOptions": {
     "embed": [
