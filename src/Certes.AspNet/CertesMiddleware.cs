@@ -218,17 +218,7 @@ namespace Certes.AspNet
                     authz = await client.NewAuthorization(id);
                     await this.contextStore.SetAuthorization(authz);
                     
-                    var challenges = authz.Data.Combinations
-                        .Select(combination => combination.Select(i => authz.Data.Challenges[i]))
-                        .Select(combination => combination.Select(c => new
-                        {
-                            Challenge = c,
-                            Responder = this.challengeResponderFactory.GetResponder(c.Type)
-                        }))
-                        .Where(combination => combination.All(c => c.Responder != null))
-                        .Select(combination => combination.Select(c => c.Challenge).ToArray())
-                        .FirstOrDefault();
-                    
+                    var challenges = await this.FindSupportedChallenges(authz);
                     if (challenges == null)
                     {
                         var challengesRequired = string.Join(", ", 
@@ -245,6 +235,31 @@ namespace Certes.AspNet
             }
 
             return authzChallenges;
+        }
+
+        private async Task<Challenge[]> FindSupportedChallenges(AcmeResult<Authorization> authz)
+        {
+            foreach (var combination in authz.Data.Combinations)
+            {
+                var hasResponder = true;
+                foreach (var idx in combination)
+                {
+                    var challenge = authz.Data.Challenges[idx];
+                    var responder = await this.challengeResponderFactory.GetResponder(challenge.Type);
+                    if (responder == null)
+                    {
+                        hasResponder = false;
+                        break;
+                    }
+                }
+
+                if (hasResponder)
+                {
+                    return combination.Select(i => authz.Data.Challenges[i]).ToArray();
+                }
+            }
+
+            return null;
         }
 
         private async Task<IList<IList<SslBinding>>> CheckCertificates()

@@ -6,11 +6,11 @@ namespace Certes.AspNet
 {
     public class ChallengeResponderFactory : IChallengeResponderFactory
     {
-        private readonly IEnumerable<IChallengeResponder> responders;
+        private readonly IChallengeResponder[] responders;
 
         public ChallengeResponderFactory(IEnumerable<IChallengeResponder> responders)
         {
-            this.responders = responders;
+            this.responders = responders.ToArray();
         }
 
         public Task<IChallengeResponder> GetResponder(string challengeType)

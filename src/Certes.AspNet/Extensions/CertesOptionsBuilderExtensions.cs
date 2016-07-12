@@ -9,8 +9,12 @@ namespace Certes
     {
         public static CertesOptionsBuilder AddInMemoryProviders(this CertesOptionsBuilder builder)
         {
-            builder.Services.AddScoped<IContextStore, InMemoryContextStore>();
-            builder.Services.AddScoped<IHttpChallengeResponder, InMemoryHttpChallengeResponder>();
+            var contextStore = new InMemoryContextStore();
+            var httpResponder = new InMemoryHttpChallengeResponder();
+
+            builder.Services.AddSingleton<IContextStore>(contextStore);
+            builder.Services.AddSingleton<IChallengeResponder>(httpResponder);
+            builder.Services.AddSingleton<IHttpChallengeResponder>(httpResponder);
             return builder;
         }
 
