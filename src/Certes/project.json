@@ -10,7 +10,7 @@
     "System.Net.Http": "4.1.0"
   },
   "frameworks": {
-    "netstandard1.3": {
+    "netstandard1.5": {
       "dependencies": {
         "System.Runtime.InteropServices": "4.1.0"
       }
