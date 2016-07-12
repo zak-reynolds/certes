@@ -21,11 +21,12 @@ namespace Certes.Examples.AppService
 
             if (env.IsDevelopment())
             {
-                builder.AddApplicationInsightsSettings(developerMode: true);
                 builder.AddUserSecrets();
             }
 
             builder.AddEnvironmentVariables();
+
+            builder.AddApplicationInsightsSettings(developerMode: true);
             Configuration = builder.Build();
         }
         
@@ -50,11 +51,11 @@ namespace Certes.Examples.AppService
             if (env.IsDevelopment())
             {
                 loggerFactory.AddConsole();
-                app.UseDeveloperExceptionPage();
             }
 
-            app.UseApplicationInsightsRequestTelemetry();
+            app.UseDeveloperExceptionPage();
 
+            app.UseApplicationInsightsRequestTelemetry();
             app.UseApplicationInsightsExceptionTelemetry();
 
             app.UseCertes()
