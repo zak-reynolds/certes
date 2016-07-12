@@ -44,8 +44,8 @@ namespace Certes.Examples.AppService
         
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddNLog();
             env.ConfigureNLog("nlog.config");
+            loggerFactory.AddNLog();
 
             if (env.IsDevelopment())
             {
@@ -55,6 +55,8 @@ namespace Certes.Examples.AppService
 
             app.UseApplicationInsightsRequestTelemetry();
 
+            app.UseApplicationInsightsExceptionTelemetry();
+
             app.UseCertes()
                 .UseCertesHttpChallengeResponder()
                 .UseCertesWebJobScheduler();
@@ -63,8 +65,6 @@ namespace Certes.Examples.AppService
             {
                 await context.Response.WriteAsync("Hello World!");
             });
-
-            app.UseApplicationInsightsExceptionTelemetry();
         }
     }
 }
