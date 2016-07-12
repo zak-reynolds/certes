@@ -15,11 +15,7 @@
         "System.Runtime.InteropServices": "4.1.0"
       }
     },
-    "net461": {
-      "frameworkAssemblies": {
-        "System.Runtime.InteropServices": "" 
-      }
-    }
+    "net461": {}
   },
   "buildOptions": {
     "embed": [
