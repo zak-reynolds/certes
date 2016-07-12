@@ -114,11 +114,11 @@ namespace Certes.AspNet
                         }
 
                         var authzFailed = false;
-                        var pendingAuthz = authzChallenges.Select(a => a.Item1).ToList();
+                        var pendingAuthz = authzChallenges.Select(a => a.Item1.Location).ToList();
                         while (pendingAuthz.Count > 0 && !authzFailed)
                         {
                             await Task.Delay(5000); // TODO: make configurable
-                            var links = pendingAuthz.Select(a => a.Location);
+                            var links = new List<Uri>(pendingAuthz);
                             pendingAuthz.Clear();
                             foreach (var link in links)
                             {
@@ -127,7 +127,7 @@ namespace Certes.AspNet
                                 
                                 if (authz.Data.Status == EntityStatus.Pending || authz.Data.Status == EntityStatus.Processing)
                                 {
-
+                                    pendingAuthz.Add(link);
                                 }
                                 else if (authz.Data.Status != EntityStatus.Valid)
                                 {
