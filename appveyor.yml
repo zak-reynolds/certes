@@ -70,7 +70,9 @@ build_script:
 
 test: off
 test_script:
-  - dotnet test ./test/Certes.Tests/project.json
+  - pushd .\test\Certes.Tests
+  - dotnet test
+  - popd
 
 configuration: Release
 
