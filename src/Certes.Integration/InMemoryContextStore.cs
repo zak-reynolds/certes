@@ -1,35 +1,19 @@
-﻿using Certes.Acme;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Certes.Integration
 {
     public class InMemoryContextStore : IContextStore
     {
-        private AcmeAccount account;
-        private readonly ConcurrentDictionary<AuthorizationIdentifier, AcmeResult<Authorization>> authorizations = new ConcurrentDictionary<AuthorizationIdentifier, AcmeResult<Authorization>>();
+        private CertesContext context;
 
-        public Task<AcmeAccount> GetAccount()
+        public Task<CertesContext> Load(bool exclusive)
         {
-            return Task.FromResult(account);
+            return Task.FromResult(context ?? (context = new CertesContext()));
         }
 
-        public Task<AcmeResult<Authorization>> GetAuthorization(AuthorizationIdentifier identifier)
+        public Task Save(CertesContext context, bool release)
         {
-            AcmeResult<Authorization> authz;
-            authorizations.TryGetValue(identifier, out authz);
-            return Task.FromResult(authz);
-        }
-
-        public Task SetAccount(AcmeAccount account)
-        {
-            this.account = account;
-            return Task.CompletedTask;
-        }
-
-        public Task SetAuthorization(AcmeResult<Authorization> authorization)
-        {
-            this.authorizations.AddOrUpdate(authorization.Data.Identifier, authorization, (id, authz) => authorization);
+            this.context = context;
             return Task.CompletedTask;
         }
     }

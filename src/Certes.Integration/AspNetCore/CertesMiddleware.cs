@@ -50,31 +50,30 @@ namespace Certes.Integration
                 return;
             }
 
-            var account = await this.contextStore.GetAccount();
+            var ctx = await this.contextStore.Load(true);
 
             using (var client = new AcmeClient(options.DirectoryUri))
             {
                 logger.LogDebug("Using ACME server {0}.", options.DirectoryUri);
 
-                if (account == null)
+                if (ctx.Account == null)
                 {
                     logger.LogDebug("No ACME account configured, register new account.");
-                    account = await client.NewRegistraton(); // TODO: add optional contact method
-                    account.Data.Agreement = account.GetTermsOfServiceUri();
-                    await client.UpdateRegistration(account);
-                    await this.contextStore.SetAccount(account);
+                    ctx.Account = await client.NewRegistraton(); // TODO: add optional contact method
+                    ctx.Account.Data.Agreement = ctx.Account.GetTermsOfServiceUri();
+                    await client.UpdateRegistration(ctx.Account);
                 }
                 else
                 {
                     logger.LogDebug("Using existing ACME account.");
-                    client.Use(account.Key);
+                    client.Use(ctx.Account.Key);
                 }
 
                 logger.LogDebug("Renewing {0} certificates.", bindingGroups.Count);
                 foreach (var bindingGroup in bindingGroups)
                 {
                     logger.LogDebug("Start renewing certificate.");
-                    var authzChallenges = await GetChallenges(client, bindingGroup);
+                    var authzChallenges = await GetChallenges(client, ctx, bindingGroup);
 
                     if (authzChallenges.Any(c => c.Item2 == null))
                     {
@@ -123,7 +122,7 @@ namespace Certes.Integration
                             foreach (var link in links)
                             {
                                 var authz = await client.GetAuthorization(link);
-                                await this.contextStore.SetAuthorization(authz);
+                                ctx.Authorizations[authz.Data.Identifier] = authz;
                                 
                                 if (authz.Data.Status == EntityStatus.Pending || authz.Data.Status == EntityStatus.Processing)
                                 {
@@ -184,11 +183,12 @@ namespace Certes.Integration
                 }
             }
 
+            await this.contextStore.Save(ctx, true);
             await next.Invoke(context);
         }
 
         private async Task<List<Tuple<AcmeResult<Authorization>, Challenge[]>>> GetChallenges(
-            AcmeClient client, IList<SslBinding> bindingGroup)
+            AcmeClient client, CertesContext ctx, IList<SslBinding> bindingGroup)
         {
             var authzChallenges = new List<Tuple<AcmeResult<Authorization>, Challenge[]>>();
 
@@ -200,12 +200,11 @@ namespace Certes.Integration
                     Value = binding.HostName
                 };
 
-                var authz = await this.contextStore.GetAuthorization(id);
+                var authz =  ctx.Authorizations[id];
 
                 if (authz?.Data?.Status == EntityStatus.Pending)
                 {
                     authz = await client.GetAuthorization(authz.Location);
-                    await this.contextStore.SetAuthorization(authz);
                 }
 
                 if (authz?.Data?.Status == EntityStatus.Valid && authz?.Data?.Expires < DateTimeOffset.Now.AddHours(-1))
@@ -216,7 +215,7 @@ namespace Certes.Integration
                 {
                     logger.LogDebug("Creating authz for {0}.", id.Value);
                     authz = await client.NewAuthorization(id);
-                    await this.contextStore.SetAuthorization(authz);
+                    ctx.Authorizations[id] = authz;
                     
                     var challenges = await this.FindSupportedChallenges(authz);
                     if (challenges == null)
