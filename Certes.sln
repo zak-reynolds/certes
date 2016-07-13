@@ -30,7 +30,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{AA
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Certes.Examples.AppService", "examples\Certes.Examples.AppService\Certes.Examples.AppService.xproj", "{E44C875B-CCDB-4D84-8A9D-15B1A0552CFE}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Certes.AspNet", "src\Certes.AspNet\Certes.AspNet.xproj", "{5A024F69-EC25-49A1-83B4-A9FF577F3AE4}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Certes.Integration", "src\Certes.Integration\Certes.Integration.xproj", "{5A024F69-EC25-49A1-83B4-A9FF577F3AE4}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Certes.Integration.Azure", "src\Certes.Integration.Azure\Certes.Integration.Azure.xproj", "{E30830A7-1C7A-4EAB-AA8A-7B1259109CB7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,6 +60,10 @@ Global
 		{5A024F69-EC25-49A1-83B4-A9FF577F3AE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A024F69-EC25-49A1-83B4-A9FF577F3AE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A024F69-EC25-49A1-83B4-A9FF577F3AE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E30830A7-1C7A-4EAB-AA8A-7B1259109CB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E30830A7-1C7A-4EAB-AA8A-7B1259109CB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E30830A7-1C7A-4EAB-AA8A-7B1259109CB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E30830A7-1C7A-4EAB-AA8A-7B1259109CB7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -68,5 +74,6 @@ Global
 		{9FDD9052-506D-460D-BF4A-142DAB517524} = {556F2BFB-DE9B-4673-BADC-63C365DA2A55}
 		{E44C875B-CCDB-4D84-8A9D-15B1A0552CFE} = {AAC70E4E-897B-45F1-A16C-94DDFB0FEA68}
 		{5A024F69-EC25-49A1-83B4-A9FF577F3AE4} = {7B11358C-CCDB-4A64-8CAF-9AA29AFD7DE3}
+		{E30830A7-1C7A-4EAB-AA8A-7B1259109CB7} = {7B11358C-CCDB-4A64-8CAF-9AA29AFD7DE3}
 	EndGlobalSection
 EndGlobal
