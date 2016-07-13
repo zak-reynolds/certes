@@ -41,29 +41,20 @@ build_script:
   - dotnet --info
   - ps: $packageVersion = if ($env:APPVEYOR_REPO_BRANCH -eq "master") { "$($env:appveyor_build_version)" } else { "$($env:appveyor_build_version)-$($env:APPVEYOR_REPO_BRANCH)" }
   - ps: $env:CERTES_PACKAGE_VERSION = $packageVersion
-  - ps: echo "Update Certes package version to $($packageVersion)"
-  - ps: $packageJson = Get-Content -Raw .\src\Certes\project.json | ConvertFrom-Json
-  - ps: $packageJson.version = $packageVersion
-  - ps: $packageJson | ConvertTo-Json | Set-Content .\src\Certes\project.json
-  - ps: echo "Update Certes.Cli package version to $($packageVersion)"
-  - ps: $packageJson = Get-Content -Raw .\src\Certes.Cli\project.json | ConvertFrom-Json
-  - ps: $packageJson.version = $packageVersion
-  - ps: $packageJson.dependencies.Certes = $packageVersion
-  - ps: $packageJson | ConvertTo-Json | Set-Content .\src\Certes.Cli\project.json
-  - ps: echo "Update Certes.AspNet package version to $($packageVersion)"
-  - ps: $packageJson = Get-Content -Raw .\src\Certes.AspNet\project.json | ConvertFrom-Json
-  - ps: $packageJson.version = $packageVersion
-  - ps: $packageJson.dependencies.Certes = $packageVersion
-  - ps: $packageJson | ConvertTo-Json | Set-Content .\src\Certes.AspNet\project.json
-  - ps: echo "Update dependency versions for Certes.Tests"
-  - ps: $packageJson = Get-Content -Raw .\test\Certes.Tests\project.json | ConvertFrom-Json
-  - ps: $packageJson.dependencies.Certes = $packageVersion
-  - ps: $packageJson.dependencies.'Certes.Cli' = $packageVersion
-  - ps: $packageJson.dependencies.'Certes.AspNet' = $packageVersion
-  - ps: $packageJson | ConvertTo-Json | Set-Content .\test\Certes.Tests\project.json
+  - ps: >-
+      Get-ChildItem -Path ./ -Filter project.json -Recurse | foreach {
+        $projectJson = Get-Content -Raw $_.FullName | ConvertFrom-Json
+        if ($projectJson.version) { $projectJson.version = $packageVersion }
+        if ($projectJson.dependencies -and $projectJson.dependencies.'Certes') { $projectJson.dependencies.'Certes' = $packageVersion }
+        if ($projectJson.dependencies -and $projectJson.dependencies.'Certes.Cli') { $projectJson.dependencies.'Certes.Cli' = $packageVersion }
+        if ($projectJson.dependencies -and $projectJson.dependencies.'Certes.Integration') { $projectJson.dependencies.'Certes.Integration' = $packageVersion }
+        if ($projectJson.dependencies -and $projectJson.dependencies.'Certes.Integration.Azure') { $projectJson.dependencies.'Certes.Integration.Azure' = $packageVersion }
+        $projectJson | ConvertTo-Json | Set-Content $_.FullName
+      }
   - dotnet restore
   - dotnet pack -c release -o ./build/nuget ./src/Certes/project.json
-  - dotnet pack -c release -o ./build/nuget ./src/Certes.AspNet/project.json
+  - dotnet pack -c release -o ./build/nuget ./src/Certes.Integration/project.json
+  - dotnet pack -c release -o ./build/nuget ./src/Certes.Integration.Azure/project.json
   - dotnet publish -f netcoreapp1.0 -c release -o ./build/cli/bin ./src/Certes.Cli/project.json
   - ps: '"dotnet %~dp0bin/Certes.Cli.dll %* " | Set-Content .\build\cli\certes.bat'
   - 7z a build\certes-cli.zip .\build\cli\*.* -r
@@ -80,8 +71,11 @@ artifacts:
     - path: build\nuget\Certes.$(CERTES_PACKAGE_VERSION).nupkg
       name: nupkg
 
-    - path: build\nuget\Certes.AspNet.$(CERTES_PACKAGE_VERSION).nupkg
-      name: nupkg-azure
+    - path: build\nuget\Certes.Integration.$(CERTES_PACKAGE_VERSION).nupkg
+      name: nupkg-int
+
+    - path: build\nuget\Certes.Integration.Azure.$(CERTES_PACKAGE_VERSION).nupkg
+      name: nupkg-int-azure
       
     - path: build\certes-cli.zip
       name: cli
@@ -125,7 +119,7 @@ deploy:
       secure: RSdqUIwRSn8DI5xaa4iWBzOtYU6y3K9JRh07myQpAIRf5IhlwsZpFsnQOpCg1g7J
     skip_symbols: true
     symbol_server:           # remove to push symbols to SymbolSource.org
-    artifact: nupkg,nupkg-azure
+    artifact: nupkg,nupkg-int,,nupkg-int-azure
     on:
       branch:
         - dev
