@@ -1,7 +1,10 @@
 ﻿using Certes.AspNet;
+using Certes.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -36,10 +39,13 @@ namespace Certes
 
         public static IApplicationBuilder UseCertesWebJobScheduler(this IApplicationBuilder app)
         {
-            var env = app.ApplicationServices.GetRequiredService<IHostingEnvironment>();
+            var serviceProvider = app.ApplicationServices;
+            var env = serviceProvider.GetRequiredService<IHostingEnvironment>();
+            var options = serviceProvider.GetService<IOptions<WebJobSchedulerOptions>>();
+            
             var webJobPath = Path.Combine(env.ContentRootPath, "app_data/jobs/triggered/certes");
 
-            webJobDeploymentTask = DeployWebJobScheduler(webJobPath)
+            webJobDeploymentTask = DeployWebJobScheduler(webJobPath, options)
                 .ContinueWith(tsk =>
                 {
                     webJobDeploymentTask = null;
@@ -48,7 +54,7 @@ namespace Certes
             return app;
         }
 
-        private static async Task DeployWebJobScheduler(string webJobPath)
+        private static async Task DeployWebJobScheduler(string webJobPath, IOptions<WebJobSchedulerOptions> options)
         {
             var dir = new DirectoryInfo(webJobPath);
             if (!dir.Exists)
@@ -72,6 +78,20 @@ namespace Certes
                 {
                     await srcStream.CopyToAsync(destStream);
                 }
+            }
+
+            var optionsValue = options.Value;
+            if (string.IsNullOrWhiteSpace(optionsValue.Schedule))
+            {
+                optionsValue.Schedule = "0 0 0 * * *";
+            }
+
+            var jobSettingsPath = Path.Combine(webJobPath, "settings.job");
+            using (var destStream = File.Create(jobSettingsPath))
+            using (var writer = new StreamWriter(destStream))
+            {
+                var content = JsonConvert.SerializeObject(optionsValue, Formatting.None, JsonUtil.CreateSettings());
+                await writer.WriteAsync(content);
             }
         }
     }
