@@ -1,4 +1,7 @@
 ﻿using Certes.Acme;
+using Microsoft.Azure.Management.Dns;
+using Microsoft.Extensions.Options;
+using Microsoft.Rest;
 using System;
 using System.Threading.Tasks;
 
@@ -6,11 +9,13 @@ namespace Certes.AspNet.Azure
 {
     public class DnsChallengeResponder : IChallengeResponder
     {
-        private readonly IClientCredentialProvider credentialProvider;
+        private readonly IClientCredentialProvider accessTokenProvider;
+        private readonly DnsOptions options;
 
-        public DnsChallengeResponder(IClientCredentialProvider credentialProvider)
+        public DnsChallengeResponder(IClientCredentialProvider credentialProvider, IOptions<DnsOptions> options)
         {
-            this.credentialProvider = credentialProvider;
+            this.accessTokenProvider = credentialProvider;
+            this.options = options.Value;
         }
 
         public string ChallengeType
@@ -29,6 +34,16 @@ namespace Certes.AspNet.Azure
         public Task Remove(Challenge challenge)
         {
             throw new NotImplementedException();
+        }
+
+        private async Task<DnsManagementClient> CreateClient()
+        {
+            var token = await this.accessTokenProvider.GetOrCreateAccessToken();
+            var credentials = new TokenCredentials(token);
+            return new DnsManagementClient(credentials)
+            {
+                SubscriptionId = options.SubscriptionId
+            };
         }
     }
 }
