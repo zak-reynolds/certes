@@ -1,4 +1,6 @@
-﻿using Microsoft.Azure.Management.WebSites;
+﻿using Certes.Integration;
+using Certes.Integration.Azure;
+using Microsoft.Azure.Management.WebSites;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
