@@ -1,6 +1,4 @@
-﻿using Certes.Integration;
-using Certes.Integration.Azure;
-using Microsoft.Azure.Management.WebSites;
+﻿using Microsoft.Azure.Management.WebSites;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -10,7 +8,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Certes.AspNet.Azure
+namespace Certes.Integration.Azure
 {
     public class AzureWebAppSslBindingManagerTests
     {

@@ -1,6 +1,5 @@
 ﻿using Certes.Acme;
 using Certes.Jws;
-using Certes.Pkcs;
 using Moq;
 using Moq.Protected;
 using Newtonsoft.Json;
@@ -14,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Certes.Tests
+namespace Certes
 {
     public class AcmeClientTests
     {
