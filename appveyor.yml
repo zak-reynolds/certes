@@ -49,7 +49,7 @@ build_script:
         if ($projectJson.dependencies -and $projectJson.dependencies.'Certes.Cli') { $projectJson.dependencies.'Certes.Cli' = $packageVersion }
         if ($projectJson.dependencies -and $projectJson.dependencies.'Certes.Integration') { $projectJson.dependencies.'Certes.Integration' = $packageVersion }
         if ($projectJson.dependencies -and $projectJson.dependencies.'Certes.Integration.Azure') { $projectJson.dependencies.'Certes.Integration.Azure' = $packageVersion }
-        $projectJson | ConvertTo-Json | Set-Content $_.FullName
+        $projectJson | ConvertTo-Json -Depth 100 -Compress | Set-Content $_.FullName
       }
   - dotnet restore
   - dotnet pack -c release -o ./build/nuget ./src/Certes/project.json
