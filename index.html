@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <title>Certes by fszlin</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Certes</h1>
+        <h2>A client implantation for the Automated Certificate Management Environment (ACME) protocol</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/fszlin/certes/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/fszlin/certes/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/fszlin/certes" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>
+<a id="certes-acme-client" class="anchor" href="#certes-acme-client" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Certes ACME Client</h1>
+
+<p><a href="https://travis-ci.org/fszlin/certes"><img src="https://travis-ci.org/fszlin/certes.svg?branch=master" alt="Travis"></a>
+<a href="https://ci.appveyor.com/project/fszlin/certes/branch/master"><img src="https://ci.appveyor.com/api/projects/status/4wwiivqs8rl0l63q/branch/master?svg=true" alt="AppVeyor"></a>
+<a href="https://www.nuget.org/packages/certes/"><img src="https://buildstats.info/nuget/certes" alt="NuGet"></a>
+<a href="https://www.myget.org/feed/dymetis/package/nuget/certes"><img src="https://buildstats.info/myget/dymetis/certes?includePreReleases=true" alt="MyGet"></a></p>
+
+<p>Certes is a client implantation for the Automated Certificate Management
+Environment (ACME) protocol, build on .NET Core. It is aimed to provide a easy
+to use API for managing certificates using scripts during build process.</p>
+
+<p>Before <a href="https://letsencrypt.org">Let's Encrypt</a>, SSL/TLS certificate for HTTPS
+was a privilege for who can afford it. With Certes, you can quickly generate
+certificates using .NET or command line, and it is <strong>free</strong>.</p>
+
+<h1>
+<a id="get-certified-in-5-minutes" class="anchor" href="#get-certified-in-5-minutes" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Get Certified in 5 Minutes</h1>
+
+<p>Install <a href="https://www.microsoft.com/net/core">.NET Core</a></p>
+
+<p>Download the <a href="https://github.com/fszlin/certes/releases">latest release</a>, 
+   and extract the files</p>
+
+<p>Run these commands to start the authorization process</p>
+
+<div class="highlight highlight-source-shell"><pre>    <span class="pl-c"># Create new registration on LE, and accept terms of services</span>
+    certes register --email your_email@my_domain.com --agree-tos
+
+    <span class="pl-c"># Initialize authorization for host name(s)</span>
+    certes authz --v my_domain.com <span class="pl-c">#--v www.my_domain.com --v my_domain2.com</span>
+
+    <span class="pl-c"># Show the http-01 key authorization for specified host name(s)</span>
+    certes authz --key-authz http-01 --v my_domain.com <span class="pl-c">#--v www.my_domain.com --v my_domain2.com</span></pre></div>
+
+<p>Make changes to your site so that it serves the <strong>key authorization string</strong> 
+   on the well know path.</p>
+
+<ul>
+<li>The <strong>key authorization string</strong> consists of the token and the thumbprint
+of the registration key, in form of <code>&lt;token&gt;.&lt;thumbprint&gt;</code>
+</li>
+<li>You can simply save the <strong>key authorization string</strong> in a text file, and
+upload it to <code>http://my_domain.com/.well-known/acme-challenge/&lt;token&gt;</code>
+</li>
+<li>For testing purposes, if you are hosting an ASP.NET Core app, you can add
+the following to <code>Configure</code> method of <code>Startup</code> class</li>
+</ul>
+
+<div class="highlight highlight-source-cs"><pre>        app.Map(<span class="pl-s"><span class="pl-pds">"</span>/.well-known/acme-challenge<span class="pl-pds">"</span></span>, sub =&gt;
+        {
+            sub.Run(<span class="pl-k">async</span> context =&gt;
+            {
+                <span class="pl-k">var</span> path = context.Request.Path.ToUriComponent();
+                <span class="pl-k">if</span> (path?.Length &gt; <span class="pl-c1">1</span> &amp;&amp; path.StartsWith(<span class="pl-s"><span class="pl-pds">"</span>/<span class="pl-pds">"</span></span>))
+                {
+                    context.Response.ContentType = <span class="pl-s"><span class="pl-pds">"</span>plain/text<span class="pl-pds">"</span></span>;
+                    <span class="pl-k">await</span> context.Response.WriteAsync($<span class="pl-s"><span class="pl-pds">"</span>{path.Substring(1)}.&lt;thumbprint&gt;<span class="pl-pds">"</span></span>);
+                }
+            });
+        });</pre></div>
+
+<ul>
+<li>For more details, see <a href="https://tools.ietf.org/html/draft-ietf-acme-acme-02#section-6.4.1">section 6.4.1 of the ACME spec</a>
+</li>
+</ul>
+
+<p>Continue the authorization process and generate the certificate</p>
+
+<div class="highlight highlight-source-shell"><pre>    <span class="pl-c"># Complete the http-01 challenge</span>
+    certes authz --complete-authz http-01 --v my_domain.com <span class="pl-c">#--v www.my_domain.com --v my_domain2.com</span>
+
+    <span class="pl-c"># Check the challenge status, wait until it becomes "valid"</span>
+    certes authz --refresh http-01 --v my_domain.com <span class="pl-c">#--v www.my_domain.com --v my_domain2.com</span>
+
+    <span class="pl-c"># Create a certificate with the distinguished name, and additional SAN names</span>
+    certes cert --name mycert --distinguished-name <span class="pl-s"><span class="pl-pds">"</span>CN=CA, ST=Ontario, L=Toronto, O=Certes, OU=Dev, CN=my_domain.com<span class="pl-pds">"</span></span> <span class="pl-c">#--v www.my_domain.com --v my_domain2.com</span>
+
+    <span class="pl-c"># Export the certificate in DER</span>
+    certes cert --name mycert --export-cer ./mycert.cer
+
+    <span class="pl-c"># Export the certificate's private key in PEM</span>
+    certes cert --name mycert --export-key ./mycert.key
+
+    <span class="pl-c"># Export the certificate with private key in PFX</span>
+    certes cert --name mycert --export-pfx ./mycert.pfx --password abcd1234
+
+    <span class="pl-c"># Revoke the certificate</span>
+    certes cert --name mycert --revoke</pre></div>
+
+<p>Install the certificate on your host server.</p>
+
+<p>More...</p>
+
+<ul>
+<li>Append <code>--server https://acme-staging.api.letsencrypt.org/directory</code> to the commands
+for testing again LE staging server.</li>
+<li>By default, the account and contextual data are saved in <strong>data.json</strong>, 
+use <code>--path</code> option to change the location.</li>
+</ul>
+
+<h1>
+<a id="get-started" class="anchor" href="#get-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Get Started</h1>
+
+<p>You can get Certes by grabbing the latest
+<a href="https://www.nuget.org/packages/Certes">NuGet package</a>.</p>
+
+<div class="highlight highlight-source-cs"><pre><span class="pl-k">using</span> (var client = new AcmeClient(WellKnownServers.LetsEncrypt))
+{
+    <span class="pl-c">// Create new registration</span>
+    <span class="pl-k">var</span> account = <span class="pl-k">await</span> client.NewRegistraton(<span class="pl-s"><span class="pl-pds">"</span>mailto:test@example.com<span class="pl-pds">"</span></span>);
+
+    <span class="pl-c">// Accept terms of services</span>
+    account.Data.Agreement = account.GetTermsOfServiceUri();
+    account = <span class="pl-k">await</span> client.UpdateRegistration(account);
+
+    <span class="pl-c">// Initialize authorization</span>
+    <span class="pl-k">var</span> authz = <span class="pl-k">await</span> client.NewAuthorization(<span class="pl-k">new</span> AuthorizationIdentifier
+    {
+        Type = AuthorizationIdentifierTypes.Dns,
+        Value = <span class="pl-s"><span class="pl-pds">"</span>www.my_domain.com<span class="pl-pds">"</span></span>
+    });
+
+    <span class="pl-c">// Comptue key authorization for http-01</span>
+    <span class="pl-k">var</span> httpChallengeInfo = authz.Data.Challenges.Where(c =&gt; c.Type == ChallengeTypes.Http01).First();
+    <span class="pl-k">var</span> keyAuthString = client.ComputeKeyAuthorization(httpChallengeInfo);
+
+    <span class="pl-c">// Do something to fullfill the challenge,</span>
+    <span class="pl-c">// e.g. upload key auth string to well known path, or make changes to DNS</span>
+
+    <span class="pl-c">// Info ACME server to validate the identifier</span>
+    <span class="pl-k">var</span> httpChallenge = <span class="pl-k">await</span> client.CompleteChallenge(httpChallengeInfo);
+
+    <span class="pl-c">// Check authorization status</span>
+    authz = <span class="pl-k">await</span> client.GetAuthorization(httpChallenge.Location);
+    <span class="pl-k">while</span> (authz.Data.Status == EntityStatus.Pending)
+    {
+        <span class="pl-c">// Wait for ACME server to validate the identifier</span>
+        <span class="pl-k">await</span> Task.Delay(<span class="pl-c1">10000</span>);
+        authz = <span class="pl-k">await</span> client.GetAuthorization(httpChallenge.Location);
+    }
+
+    <span class="pl-k">if</span> (authz.Data.Status == EntityStatus.Valid)
+    {
+        <span class="pl-c">// Create certificate</span>
+        <span class="pl-k">var</span> csr = <span class="pl-k">new</span> CertificationRequestBuilder();
+        csr.AddName(<span class="pl-s"><span class="pl-pds">"</span>CN<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>www.my_domain.com<span class="pl-pds">"</span></span>);
+        <span class="pl-k">var</span> cert = <span class="pl-k">await</span> client.NewCertificate(csr);
+
+        <span class="pl-c">// Export Pfx</span>
+        <span class="pl-k">var</span> pfxBuilder = cert.ToPfx();
+        <span class="pl-k">var</span> pfx = pfxBuilder.Build(<span class="pl-s"><span class="pl-pds">"</span>my-free-cert<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>abcd1234<span class="pl-pds">"</span></span>);
+        File.WriteAllBytes(<span class="pl-s"><span class="pl-pds">"</span>./my-free-cert.pfx<span class="pl-pds">"</span></span>, pfx);
+
+        <span class="pl-c">// Revoke certificate</span>
+        <span class="pl-k">await</span> client.RevokeCertificate(cert);
+    }
+}</pre></div>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
