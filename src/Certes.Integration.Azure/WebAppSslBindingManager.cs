@@ -41,7 +41,7 @@ namespace Certes.Integration.Azure
                     var exp = cert.ExpirationDate.HasValue ? cert.ExpirationDate.Value : DateTime.MaxValue;
                     foreach (var binding in group)
                     {
-                        binding.CertificateExpires = exp;
+                        binding.CertificateExpiryDate = exp;
                     }
                 }
 

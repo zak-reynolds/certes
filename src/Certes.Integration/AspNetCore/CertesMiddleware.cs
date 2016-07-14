@@ -277,7 +277,7 @@ namespace Certes.Integration
             // Renew only if no cert, or the cert is about to expire
             var renewDate = DateTimeOffset.Now.AddDays(options.RenewBeforeDays);
             bindingGroup = bindingGroup
-                .Where(g => g.Any(b => b.CertificateThumbprint == null || b.CertificateExpires <= renewDate));
+                .Where(g => g.Any(b => b.CertificateThumbprint == null || b.CertificateExpiryDate <= renewDate));
 
             return bindingGroup.Select(b => b.ToArray()).ToArray();
         }
