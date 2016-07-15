@@ -1,6 +1,4 @@
-﻿using Certes.Integration;
-using Certes.Integration.Azure;
-using Certes.Json;
+﻿using Certes.Json;
 using Microsoft.Extensions.Options;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Auth;
@@ -11,7 +9,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Certes.Azure
+namespace Certes.Integration.Azure
 {
     public class BlobStorageContextStore : IContextStore
     {
