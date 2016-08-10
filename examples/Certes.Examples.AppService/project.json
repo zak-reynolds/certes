@@ -9,9 +9,9 @@
     "Microsoft.Extensions.Configuration.Json": "1.0.0",
     "Microsoft.Extensions.Configuration.UserSecrets": "1.0.0",
     "Microsoft.ApplicationInsights.AspNetCore": "1.0.0",
-    "NLog": "4.4.0-betaV14",
-    "NLog.Extensions.Logging": "1.0.0-rtm-alpha3",
-    "Certes.Integration.Azure": "1.0.0-*"
+    "Certes.Integration.Azure": "1.0.0-*",
+    "NLog": "4.4.0-betaV15",
+    "NLog.Extensions.Logging": "1.0.0-rtm-alpha4"
   },
 
   "tools": {
