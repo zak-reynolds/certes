@@ -60,7 +60,20 @@ namespace Certes.Examples.AppService
 
             app.UseApplicationInsightsRequestTelemetry();
             app.UseApplicationInsightsExceptionTelemetry();
-            
+
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.IsHttps)
+                {
+                    await next();
+                }
+                else
+                {
+                    var httpsUrl = $"https://{context.Request.Host}{context.Request.Path}";
+                    context.Response.Redirect(httpsUrl, true);
+                }
+            });
+
             app.UseCertes()
                 .UseCertesHttpChallengeResponder()
                 .UseCertesWebJobScheduler();
