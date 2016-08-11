@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace Certes.Integration
 {
+    /// <summary>
+    /// Middleware supports certificate renewal.
+    /// </summary>
     public class CertesMiddleware
     {
         private readonly RequestDelegate next;
@@ -19,6 +22,16 @@ namespace Certes.Integration
         private readonly IChallengeResponderFactory challengeResponderFactory;
         private readonly ICsrBuilderFactory csrBuilderFactory;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CertesMiddleware"/> class.
+        /// </summary>
+        /// <param name="next">The next middleware.</param>
+        /// <param name="optionsAccessor">The options accessor.</param>
+        /// <param name="loggerFactory">The logger factory.</param>
+        /// <param name="contextStore">The context store.</param>
+        /// <param name="challengeResponderFactory">The challenge responder factory.</param>
+        /// <param name="csrBuilderFactory">The CSR builder factory.</param>
+        /// <param name="bindingManager">The SSL binding manager.</param>
         public CertesMiddleware(
             RequestDelegate next,
             IOptions<CertesOptions> optionsAccessor,
@@ -37,6 +50,11 @@ namespace Certes.Integration
             this.csrBuilderFactory = csrBuilderFactory;
         }
 
+        /// <summary>
+        /// Processs the specified context.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <returns>The awaitable.</returns>
         public async Task Invoke(HttpContext context)
         {
             logger.LogDebug("Start renewing SSL certificates.");
@@ -223,7 +241,7 @@ namespace Certes.Integration
                         var challengesRequired = string.Join(", ", 
                             authz.Data.Combinations.Select(
                                 combination => "[" + string.Join(", ", 
-                                    combination.Select(i => "[" + authz.Data.Challenges[i].Type + "]")) +
+                                    combination.Select(i => $"[{authz.Data.Challenges[i].Type}]")) +
                                     "]"));
 
                         logger.LogWarning("Can not complete authz for {0}. Require {1}", id.Value, challengesRequired);
