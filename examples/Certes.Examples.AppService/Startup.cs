@@ -74,8 +74,8 @@ namespace Certes.Examples.AppService
                 }
             });
 
-            app.UseCertes()
-                .UseCertesHttpChallengeResponder()
+            app.UseCertes() // Handle certificate renewal
+                .UseCertesHttpChallengeResponder() // Handle HTTP challenges
                 .UseCertesWebJobScheduler();
 
             app.Run(async (context) =>

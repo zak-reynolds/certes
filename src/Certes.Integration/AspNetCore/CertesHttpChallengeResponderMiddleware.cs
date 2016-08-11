@@ -17,7 +17,7 @@ namespace Certes.Integration
             IHttpChallengeResponder challengeResponder)
         {
             this.next = next;
-            this.logger = loggerFactory.CreateLogger<CertesMiddleware>();
+            this.logger = loggerFactory.CreateLogger<CertesHttpChallengeResponderMiddleware>();
             this.challengeResponder = challengeResponder;
         }
 
