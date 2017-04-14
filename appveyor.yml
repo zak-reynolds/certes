@@ -23,7 +23,6 @@ branches:
 
 init:
   - git config --global core.autocrlf input
-  - ps: New-Item build -Type directory -Force | Out-Null
   - ps: $verParts = $($env:appveyor_build_version) -Split '\.'
   - ps: $env:CERTES_ASSEMBLY_VERSION = $verParts[0] + '.' + $verParts[1] + '.' + $verParts[2]
   - ps: $env:CERTES_ASSEMBLY_FILE_VERSION = $env:CERTES_ASSEMBLY_VERSION + '.' + $verParts[3]
@@ -40,6 +39,7 @@ assembly_info:
 install:
 
 before_build:
+  - ps: New-Item build -Type directory -Force | Out-Null
   - cmd: nuget restore Certes.sln
 
 build_script:
