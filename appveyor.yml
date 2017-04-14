@@ -19,6 +19,7 @@ branches:
   only:
     - master
     - dev
+    - bld
 
 assembly_info:
   patch: true
@@ -92,7 +93,9 @@ deploy:
     draft: true
     prerelease: true
     on:
-      branch: dev
+      branch:
+        - dev
+        - bld
 
   - provider: NuGet
     #server: http://www.nuget.org/api/v2/package                  # remove to push to NuGet.org
@@ -112,4 +115,6 @@ deploy:
     symbol_server:           # remove to push symbols to SymbolSource.org
     artifact: nupkg
     on:
-      branch: dev
+      branch:
+        - dev
+        - bld
