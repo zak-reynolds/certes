@@ -1,4 +1,4 @@
-version: 1.0.6.{build}
+version: 1.0.7.{build}
 build:
   verbosity: minimal
   project: Certes.sln
@@ -21,19 +21,20 @@ branches:
     - dev
     - bld
 
-assembly_info:
-  patch: true
-  file: '**\AssemblyInfo.*'
-  assembly_version: '$(CERTES_ASSEMBLY_VERSION)'
-  assembly_file_version: '$(CERTES_ASSEMBLY_VERSION)'
-  assembly_informational_version: '$(CERTES_ASSEMBLY_INFO_VERSION)'
-
 init:
   - git config --global core.autocrlf input
   - ps: $verParts = $($env:appveyor_build_version) -Split '\.'
   - ps: $env:CERTES_ASSEMBLY_VERSION = $verParts[0] + '.' + $verParts[1] + '.' + $verParts[2]
-  - ps: $env:CERTES_ASSEMBLY_INFO_VERSION = if ($env:APPVEYOR_REPO_BRANCH -eq "master") { $env:CERTES_ASSEMBLY_VERSION } else { $env:CERTES_ASSEMBLY_VERSION + '-' + $env:APPVEYOR_REPO_BRANCH }
-  - ps: $env:CERTES_PACKAGE_VERSION = $env:CERTES_ASSEMBLY_VERSION + '.' + $verParts[3] # if ($env:APPVEYOR_REPO_BRANCH -eq "master") { $env:CERTES_ASSEMBLY_VERSION + '.' + $verParts[3] } else { $env:CERTES_ASSEMBLY_VERSION + '.' + $verParts[3] + '-' + $env:APPVEYOR_REPO_BRANCH }
+  - ps: $env:CERTES_ASSEMBLY_FILE_VERSION = $env:CERTES_ASSEMBLY_VERSION + '.' + $verParts[3]
+  - ps: $env:CERTES_ASSEMBLY_INFO_VERSION = if ($env:APPVEYOR_REPO_BRANCH -eq "master") { $env:CERTES_ASSEMBLY_VERSION } else { $env:CERTES_ASSEMBLY_VERSION + '-' + $env:APPVEYOR_REPO_BRANCH + '.' + $verParts[3] }
+  - ps: $env:CERTES_PACKAGE_VERSION = $env:CERTES_ASSEMBLY_INFO_VERSION
+
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '$(CERTES_ASSEMBLY_VERSION)'
+  assembly_file_version: '$(CERTES_ASSEMBLY_FILE_VERSION)'
+  assembly_informational_version: '$(CERTES_ASSEMBLY_INFO_VERSION)'
 
 install:
 
