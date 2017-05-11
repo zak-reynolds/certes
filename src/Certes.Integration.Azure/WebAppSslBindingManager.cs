@@ -24,7 +24,9 @@ namespace Certes.Integration.Azure
         {
             using (var client = await CreateClient())
             {
-                var site = await client.WebApps.GetAsync(options.ResourceGroup, options.Name);
+                var site = string.IsNullOrWhiteSpace(options.Slot) ?
+                    await client.WebApps.GetAsync(options.ResourceGroup, options.Name) :
+                    await client.WebApps.GetSlotAsync(options.ResourceGroup, options.Name, options.Slot);
                 var bindings = site.HostNameSslStates
                     .Where(h => !h.Name.EndsWith(".azurewebsites.net") && !h.Name.EndsWith(".trafficmanager.net"))
                     .Select(h => new SslBinding

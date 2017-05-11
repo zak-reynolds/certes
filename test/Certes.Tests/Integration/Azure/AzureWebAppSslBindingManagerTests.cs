@@ -1,4 +1,4 @@
-﻿using Microsoft.Azure.Management.WebSites;
+﻿using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -27,20 +27,26 @@ namespace Certes.Integration.Azure
         public async Task CanInstallCertificate()
         {
             const string password = "abcd1234";
-            const string thumbprint = "78a55983b0ad8db1f636c0e4a18d00647abfbee3";
+            const string thumbprint = "‎3d5d8c565102ebb9af9434524083794225dcfc7a";
 
             BuildServiceProvider();
-            var pfx = File.ReadAllBytes("./Data/cert.p12");
 
             ISslBindingManager mgr = CreateBindingManager();
-            await mgr.InstallCertificate(thumbprint, pfx, password);
+
+            using (var stream = Helper.OpenResource("Certes.Tests.Data.cert.p12"))
+            using (var buffer = new MemoryStream())
+            {
+                await stream.CopyToAsync(buffer);
+                await mgr.InstallCertificate(thumbprint, buffer.ToArray(), password);
+            }
+
             var webAppOptions = serviceProvider.GetRequiredService<IOptions<WebAppOptions>>().Value;
             using (var client = await CreateClient())
             {
-                var cert = await client.Certificates.GetCertificateAsync(webAppOptions.ResourceGroup, thumbprint);
+                var cert = await client.Certificates.GetAsync(webAppOptions.ResourceGroup, thumbprint);
                 Assert.NotNull(cert);
 
-                await client.Certificates.DeleteCertificateAsync(webAppOptions.ResourceGroup, thumbprint);
+                await client.Certificates.DeleteAsync(webAppOptions.ResourceGroup, thumbprint);
             }
         }
 
@@ -53,7 +59,7 @@ namespace Certes.Integration.Azure
         private void BuildServiceProvider()
         {
             var config = new ConfigurationBuilder()
-                .AddUserSecrets("certes-dev")
+                .AddUserSecrets("certes-ci")
                 .AddEnvironmentVariables()
                 .Build();
 

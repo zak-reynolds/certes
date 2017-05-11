@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
+    <UserSecretsId>certes-ci</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

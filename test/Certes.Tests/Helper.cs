@@ -1,6 +1,8 @@
 ﻿using Certes.Jws;
 using Certes.Pkcs;
 using System;
+using System.IO;
+using System.Reflection;
 
 namespace Certes
 {
@@ -11,6 +13,12 @@ namespace Certes
         internal static AccountKey Loadkey()
         {
             return new AccountKey(new KeyInfo { PrivateKeyInfo = Convert.FromBase64String(PrivateKey) });
+        }
+
+        internal static Stream OpenResource(params string[] paths)
+        {
+            var assembly = typeof(Helper).GetTypeInfo().Assembly;
+            return assembly.GetManifestResourceStream(string.Join(".", paths));
         }
     }
 }

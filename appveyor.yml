@@ -13,16 +13,19 @@ skip_commits:
 environment:
   codecov_upload_token:
     secure: DxYtxftZ1rpZhZzixRqY3hHFrlEZlh62XPV4tcO+zxdsRNZWPSEl967VpRevAPSo
+  applicationinsights__instrumentationkey:
+    secure: LGrqxdCdHOM9z5brotbGXf8IA379NPj/n6W88H7YeuNusZb6dLwhxCfEtrk+3nGL
   certes__azure__servicePrincipal__tenantId:
     secure: 4FrR9+ARA8H+bLFFQDT4C1TAZv/LTO69vFpfjpqR5BVTedqgsZcey6xuS2TDA46l
   certes__azure__servicePrincipal__clientId:
-    secure: s0tJTf4OqtsG0ze5ZL0g4kWcVw3oMnNiaepf0cwkh1U1s214jf1AdwGuFss2y7q7
+    secure: icfPnryDWgqU1TmP3J7gsidrpY9jGAuWY4gXf6CeDkVOELNN25JaeMvaRztUqtlb
   certes__azure__servicePrincipal__clientSecret:
-    secure: IObP5jhbKBiEWg08kGjDNYhUBkOJw++2W3KqjsJT4t+16l5+dPxcTN4Pj4WSXJNC
+    secure: G6w5sBPakdsrFsrqndhGO5yA7uayzqnFY+TkeN4OueI3XDYdwxyqknq10ALaw3O3
   certes__azure__webApp__subscriptionId:
     secure: FSK01SfyZI0x6AX2XVDxcE6kUAmg4fYja2hsNcQNBxa1PBddSZtZ8rthvO5c8o/R
   certes__azure__webApp__resourceGroup: certes
-  certes__azure__webApp__name: certes-ci
+  certes__azure__webApp__name: certes
+  certes__azure__webApp__slot: ci
 
 branches:
   # whitelist
