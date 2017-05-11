@@ -6,6 +6,7 @@ namespace Certes.Integration
 {
     public class InMemoryHttpChallengeResponder : IChallengeResponder, IHttpChallengeResponder
     {
+        private static readonly Task CompletedTask = Task.FromResult(0);
         private readonly ConcurrentDictionary<string, Challenge> challenges = new ConcurrentDictionary<string, Challenge>();
 
         public string ChallengeType
@@ -19,7 +20,7 @@ namespace Certes.Integration
         public Task Deploy(Challenge challenge)
         {
             this.challenges.AddOrUpdate(challenge.Token, challenge, (token, existing) => challenge);
-            return Task.CompletedTask;
+            return CompletedTask;
         }
 
         public Task<string> GetKeyAuthorizationString(string token)
@@ -32,7 +33,7 @@ namespace Certes.Integration
         public Task Remove(Challenge challenge)
         {
             this.challenges.TryRemove(challenge.Token, out challenge);
-            return Task.CompletedTask;
+            return CompletedTask;
         }
     }
 }

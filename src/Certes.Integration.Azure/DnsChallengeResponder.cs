@@ -1,5 +1,5 @@
 ﻿using Certes.Acme;
-using Microsoft.Azure.Management.Dns;
+using Microsoft.Azure.Management.Dns.Fluent;
 using Microsoft.Extensions.Options;
 using Microsoft.Rest;
 using System;

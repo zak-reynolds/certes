@@ -1,5 +1,5 @@
-﻿using Microsoft.Azure.Management.WebSites;
-using Microsoft.Azure.Management.WebSites.Models;
+﻿using Microsoft.Azure.Management.AppService.Fluent;
+using Microsoft.Azure.Management.AppService.Fluent.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.Rest;
 using System;
@@ -24,7 +24,7 @@ namespace Certes.Integration.Azure
         {
             using (var client = await CreateClient())
             {
-                var site = await client.Sites.GetSiteAsync(options.ResourceGroup, options.Name);
+                var site = await client.WebApps.GetAsync(options.ResourceGroup, options.Name);
                 var bindings = site.HostNameSslStates
                     .Where(h => !h.Name.EndsWith(".azurewebsites.net") && !h.Name.EndsWith(".trafficmanager.net"))
                     .Select(h => new SslBinding
@@ -37,7 +37,7 @@ namespace Certes.Integration.Azure
                 foreach (var group in bindings.Where(b => b.CertificateThumbprint != null).GroupBy(b => b.CertificateThumbprint))
                 {
                     var thumbprint = group.Select(g => g.CertificateThumbprint).First();
-                    var cert = await client.Certificates.GetCertificateAsync(options.ResourceGroup, thumbprint);
+                    var cert = await client.Certificates.GetAsync(options.ResourceGroup, thumbprint);
                     var exp = cert.ExpirationDate.HasValue ? cert.ExpirationDate.Value : DateTime.MaxValue;
                     foreach (var binding in group)
                     {
@@ -53,11 +53,11 @@ namespace Certes.Integration.Azure
         {
             using (var client = await CreateClient())
             {
-                var site = await client.Sites.GetSiteAsync(options.ResourceGroup, options.Name);
-                await client.Certificates.CreateOrUpdateCertificateAsync(options.ResourceGroup, certificateThumbprint, new Certificate
+                var site = await client.WebApps.GetAsync(options.ResourceGroup, options.Name);
+                await client.Certificates.CreateOrUpdateAsync(options.ResourceGroup, certificateThumbprint, new CertificateInner
                 {
                     Location = site.Location,
-                    PfxBlob = Convert.ToBase64String(pfxBlob),
+                    PfxBlob = pfxBlob,
                     Password = password
                 });
             }
@@ -67,7 +67,7 @@ namespace Certes.Integration.Azure
         {
             using (var client = await CreateClient())
             {
-                var site = await client.Sites.GetSiteAsync(options.ResourceGroup, options.Name);
+                var site = await client.WebApps.GetAsync(options.ResourceGroup, options.Name);
 
                 
                 foreach (var bindingState in site.HostNameSslStates.Where(h => hostNames.Contains(h.Name)))
@@ -77,7 +77,7 @@ namespace Certes.Integration.Azure
                     bindingState.ToUpdate = true;
                 }
                 
-                await client.Sites.CreateOrUpdateSiteAsync(
+                await client.WebApps.CreateOrUpdateAsync(
                     options.ResourceGroup, options.Name, site);
             }
         }

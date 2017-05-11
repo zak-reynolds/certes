@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>A client implantation for the Automated Certificate Management Environment (ACME) protocol</Description>
+    <AssemblyTitle>Certes ACME Client for Azure App Services</AssemblyTitle>
+    <Authors>Eddie Lin</Authors>
+    <TargetFrameworks>netstandard1.6;net451</TargetFrameworks>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AssemblyName>Certes.Integration.Azure</AssemblyName>
+    <PackageId>Certes.Integration.Azure</PackageId>
+    <PackageTags>Certes;letsencrypt;ACME;HTTPS;SSL;Certificate;Azure;Web App;DNS;App Services</PackageTags>
+    <PackageProjectUrl>https://github.com/fszlin/certes</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/fszlin/certes/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/fszlin/certes</RepositoryUrl>
+    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.6' ">$(PackageTargetFallback);dnxcore50;portable-net451+win8</PackageTargetFallback>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\**\*.*" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Certes\Certes.csproj" />
+    <ProjectReference Include="..\Certes.Integration\Certes.Integration.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.0.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="3.13.9" />
+    <PackageReference Include="WindowsAzure.Storage" Version="8.1.1" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net451' ">
+    <Reference Include="System.Linq" />
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>

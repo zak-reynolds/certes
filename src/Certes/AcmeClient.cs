@@ -14,10 +14,25 @@ namespace Certes
     /// <summary>
     /// Represents a ACME client.
     /// </summary>
-    public class AcmeClient : IDisposable
+    public class AcmeClient : IAcmeClient, IDisposable
     {
-        private readonly AcmeHttpHandler handler;
+        private readonly IAcmeHttpHandler handler;
         private IAccountKey key;
+        private readonly bool shouldDisposeHander;
+
+        /// <summary>
+        /// Gets the HTTP handler.
+        /// </summary>
+        /// <value>
+        /// The HTTP handler.
+        /// </value>
+        public IAcmeHttpHandler HttpHandler
+        {
+            get
+            {
+                return handler;
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AcmeClient"/> class.
@@ -26,13 +41,14 @@ namespace Certes
         public AcmeClient(Uri serverUri)
             : this(new AcmeHttpHandler(serverUri))
         {
+            shouldDisposeHander = true;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AcmeClient"/> class.
         /// </summary>
         /// <param name="handler">The ACME handler.</param>
-        public AcmeClient(AcmeHttpHandler handler)
+        public AcmeClient(IAcmeHttpHandler handler)
         {
             this.handler = handler;
         }
@@ -57,7 +73,7 @@ namespace Certes
             {
                 this.key = new AccountKey();
             }
-            
+
             var registration = new Registration
             {
                 Contact = contact,
@@ -72,6 +88,8 @@ namespace Certes
             {
                 Links = result.Links,
                 Data = result.Data,
+                Json = result.Json,
+                Raw = result.Raw,
                 Location = result.Location,
                 Key = key.Export(),
                 ContentType = result.ContentType
@@ -134,6 +152,8 @@ namespace Certes
             return new AcmeResult<Authz>
             {
                 Data = result.Data,
+                Json = result.Json,
+                Raw = result.Raw,
                 Links = result.Links,
                 Location = result.Location,
                 ContentType = result.ContentType
@@ -153,6 +173,8 @@ namespace Certes
             return new AcmeResult<Authz>
             {
                 Data = result.Data,
+                Json = result.Json,
+                Raw = result.Raw,
                 Links = result.Links,
                 Location = result.Location ?? location,
                 ContentType = result.ContentType
@@ -166,11 +188,23 @@ namespace Certes
         /// <returns>The key authorization string.</returns>
         public string ComputeKeyAuthorization(Challenge challenge)
         {
-            var jwkThumbprint = this.key.GenerateThumbprint();
-            var jwkThumbprintEncoded = JwsConvert.ToBase64String(jwkThumbprint);
-            var token = challenge.Token;
-            return $"{token}.{jwkThumbprintEncoded}";
+            return challenge.ComputeKeyAuthorization(this.key);
+        }
 
+        /// <summary>
+        /// Computes the DNS value for the <paramref name="challenge"/>.
+        /// </summary>
+        /// <param name="challenge">The challenge.</param>
+        /// <returns>The value for the text DNS record.</returns>
+        /// <exception cref="System.InvalidOperationException">If the provided challenge is not a DNS challenge.</exception>
+        public string ComputeDnsValue(Challenge challenge)
+        {
+            if (challenge?.Type != ChallengeTypes.Dns01)
+            {
+                throw new InvalidOperationException("The provided challenge is not a DNS challenge.");
+            }
+
+            return challenge.ComputeDnsValue(this.key);
         }
 
         /// <summary>
@@ -198,6 +232,8 @@ namespace Certes
             return new AcmeResult<Challenge>
             {
                 Data = result.Data,
+                Json = result.Json,
+                Raw = result.Raw,
                 Links = result.Links,
                 Location = result.Location,
                 ContentType = result.ContentType
@@ -207,12 +243,10 @@ namespace Certes
         /// <summary>
         /// Creates a new certificate.
         /// </summary>
-        /// <param name="csrProvider">The certificate signing request (CSR) provider.</param>
+        /// <param name="csrBytes">The certificate signing request data.</param>
         /// <returns>The certificate issued.</returns>
-        public async Task<AcmeCertificate> NewCertificate(ICertificationRequestBuilder csrProvider)
+        public async Task<AcmeCertificate> NewCertificate(byte[] csrBytes)
         {
-            var csrBytes = csrProvider.Generate();
-
             var payload = new Certificate
             {
                 Csr = JwsConvert.ToBase64String(csrBytes),
@@ -232,7 +266,6 @@ namespace Certes
             var cert = new AcmeCertificate
             {
                 Raw = result.Raw,
-                Key = csrProvider.Export(),
                 Links = result.Links,
                 Location = result.Location,
                 ContentType = result.ContentType
@@ -252,7 +285,6 @@ namespace Certes
                     currentCert.Issuer = new AcmeCertificate
                     {
                         Raw = issuerResult.Raw,
-                        Key = csrProvider.Export(),
                         Links = issuerResult.Links,
                         Location = issuerResult.Location,
                         ContentType = issuerResult.ContentType
@@ -262,6 +294,19 @@ namespace Certes
                 }
             }
 
+            return cert;
+        }
+
+        /// <summary>
+        /// Creates a new certificate.
+        /// </summary>
+        /// <param name="csrProvider">The certificate signing request (CSR) provider.</param>
+        /// <returns>The certificate issued.</returns>
+        public async Task<AcmeCertificate> NewCertificate(ICertificationRequestBuilder csrProvider)
+        {
+            var csrBytes = csrProvider.Generate();
+            var cert = await NewCertificate(csrBytes);
+            cert.Key = csrProvider.Export();
             return cert;
         }
 
@@ -299,7 +344,7 @@ namespace Certes
         {
             if (response.Error != null)
             {
-                throw new Exception($"{ response.Error.Type}: {response.Error.Detail} ({response.Error.Status})");
+                throw new Exception($"{response.Error.Type}: {response.Error.Detail} ({response.Error.Status})");
             }
         }
 
@@ -316,10 +361,14 @@ namespace Certes
             {
                 if (disposing)
                 {
-                    this.handler?.Dispose();
+                    if (shouldDisposeHander)
+                    {
+                        (handler as IDisposable)?.Dispose();
+                    }
+
                     (key as IDisposable)?.Dispose();
                 }
-                
+
                 disposedValue = true;
             }
         }

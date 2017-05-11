@@ -1,26 +1,18 @@
-version: 1.0.2.{build}
+version: 1.0.7.{build}
 build:
   verbosity: minimal
+  project: Certes.sln
 
 skip_tags: true
+image: Visual Studio 2017
 
 skip_commits:
   files:
   - '*.md'
 
-branches:
-  # whitelist
-  only:
-    - master
-    - dev
-    - dev-azure
-
-assembly_info:
-  patch: true
-  file: AssemblyInfo.*
-  assembly_version: "1.0"
-
 environment:
+  codecov_upload_token:
+    secure: DxYtxftZ1rpZhZzixRqY3hHFrlEZlh62XPV4tcO+zxdsRNZWPSEl967VpRevAPSo
   certes__azure__servicePrincipal__tenantId:
     secure: 4FrR9+ARA8H+bLFFQDT4C1TAZv/LTO69vFpfjpqR5BVTedqgsZcey6xuS2TDA46l
   certes__azure__servicePrincipal__clientId:
@@ -30,54 +22,73 @@ environment:
   certes__azure__webApp__subscriptionId:
     secure: FSK01SfyZI0x6AX2XVDxcE6kUAmg4fYja2hsNcQNBxa1PBddSZtZ8rthvO5c8o/R
   certes__azure__webApp__resourceGroup: certes
-  certes__azure__webApp__name: certes
+  certes__azure__webApp__name: certes-ci
+
+branches:
+  # whitelist
+  only:
+    - master
+    - dev
+    - bld
+    - dev-azure
 
 init:
   - git config --global core.autocrlf input
+  - ps: $verParts = $($env:appveyor_build_version) -Split '\.'
+  - ps: $env:CERTES_ASSEMBLY_VERSION = $verParts[0] + '.' + $verParts[1] + '.' + $verParts[2]
+  - ps: $env:CERTES_ASSEMBLY_FILE_VERSION = $env:CERTES_ASSEMBLY_VERSION + '.' + $verParts[3]
+  - ps: $env:CERTES_ASSEMBLY_INFO_VERSION = if ($env:APPVEYOR_REPO_BRANCH -eq "master") { $env:CERTES_ASSEMBLY_VERSION } else { $env:CERTES_ASSEMBLY_VERSION + '-' + $env:APPVEYOR_REPO_BRANCH + '-' + $verParts[3] }
+  - ps: $env:CERTES_PACKAGE_VERSION = $env:CERTES_ASSEMBLY_INFO_VERSION
+
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '$(CERTES_ASSEMBLY_VERSION)'
+  assembly_file_version: '$(CERTES_ASSEMBLY_FILE_VERSION)'
+  assembly_informational_version: '$(CERTES_ASSEMBLY_INFO_VERSION)'
 
 install:
 
-build_script:
-  - dotnet --info
-  - ps: $packageVersion = if ($env:APPVEYOR_REPO_BRANCH -eq "master") { "$($env:appveyor_build_version)" } else { "$($env:appveyor_build_version)-$($env:APPVEYOR_REPO_BRANCH)" }
-  - ps: $env:CERTES_PACKAGE_VERSION = $packageVersion
-  - ps: >-
-      Get-ChildItem -Path ./ -Filter project.json -Recurse | foreach {
-        $projectJson = Get-Content -Raw $_.FullName | ConvertFrom-Json
-        if ($projectJson.version) { $projectJson.version = $packageVersion }
-        if ($projectJson.dependencies -and $projectJson.dependencies.'Certes') { $projectJson.dependencies.'Certes' = $packageVersion }
-        if ($projectJson.dependencies -and $projectJson.dependencies.'Certes.Cli') { $projectJson.dependencies.'Certes.Cli' = $packageVersion }
-        if ($projectJson.dependencies -and $projectJson.dependencies.'Certes.Integration') { $projectJson.dependencies.'Certes.Integration' = $packageVersion }
-        if ($projectJson.dependencies -and $projectJson.dependencies.'Certes.Integration.Azure') { $projectJson.dependencies.'Certes.Integration.Azure' = $packageVersion }
-        $projectJson | ConvertTo-Json -Depth 100 -Compress | Set-Content $_.FullName
-      }
-  - dotnet restore
-  - dotnet pack -c release -o ./build/nuget ./src/Certes/project.json
-  - dotnet pack -c release -o ./build/nuget ./src/Certes.Integration/project.json
-  - dotnet pack -c release -o ./build/nuget ./src/Certes.Integration.Azure/project.json
-  - dotnet publish -f netcoreapp1.0 -c release -o ./build/cli/bin ./src/Certes.Cli/project.json
-  - ps: '"dotnet %~dp0bin/Certes.Cli.dll %* " | Set-Content .\build\cli\certes.bat'
-  - 7z a build\certes-cli.zip .\build\cli\*.* -r
+before_build:
+  - ps: New-Item build -Type directory -Force | Out-Null
+  - cmd: nuget restore Certes.sln
 
-test: off
+build_script:
+  - msbuild -t:src\Certes
+  - msbuild -t:src\Certes:pack -p:PackageVersion="%CERTES_PACKAGE_VERSION%"
+  - msbuild -t:src\Certes_Integration
+  - msbuild -t:src\Certes_Integration:pack -p:PackageVersion="%CERTES_PACKAGE_VERSION%"
+  - msbuild -t:src\Certes_Integration_Azure
+  - msbuild -t:src\Certes_Integration_Azure:pack -p:PackageVersion="%CERTES_PACKAGE_VERSION%"
+  - msbuild -t:src\Certes_Cli
+  - msbuild -t:src\Certes_Cli:Publish
+  - ps: Get-ChildItem -Path "./src/Certes/**/Certes.$($env:CERTES_PACKAGE_VERSION).nupkg" -Recurse | Move-Item -Destination "./build"
+  - ps: Get-ChildItem -Path "./src/Certes/**/Certes.Integration.$($env:CERTES_PACKAGE_VERSION).nupkg" -Recurse | Move-Item -Destination "./build"
+  - ps: Get-ChildItem -Path "./src/Certes/**/Certes.Integration.Azure.$($env:CERTES_PACKAGE_VERSION).nupkg" -Recurse | Move-Item -Destination "./build"
+  - ps: '"dotnet %~dp0bin/Certes.Cli.dll %* " | Set-Content .\src\Certes.Cli\bin\$($env:CONFIGURATION)\netcoreapp1.0\publish\certes.bat'
+  - 7z a build\certes-cli.zip .\src\Certes.Cli\bin\%CONFIGURATION%\netcoreapp1.0\publish\*.* -r
+
+#test: off
+before_test:
+  - msbuild -t:rebuild -p:DebugType=full;DebugSymbols=True
+
 test_script:
-  - ps: pushd .\test\Certes.Tests
-  - dotnet test
-  - ps: popd
+  - ps: $openCover = "$($env:USERPROFILE)/.nuget/packages/opencover/4.6.519/tools/OpenCover.Console.exe"
+  - ps: >-
+      & $openCover "-register:user" "-target:dotnet.exe" "-targetargs:test ./test/Certes.Tests/Certes.Tests.csproj -- -noshadow -appveyor" "-oldstyle" "-output:./build/coverage.xml" "-filter:+[Certes]* +[Certes.Cli]*" "-hideskipped:All"
+
+after_test:
+  - "SET PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%"
+  - pip install codecov
+  - codecov -f "./build/coverage.xml" -t %codecov_upload_token%
 
 configuration: Release
 
 artifacts:
-    - path: build\nuget\Certes.$(CERTES_PACKAGE_VERSION).nupkg
+    - path: build/*.nupkg
       name: nupkg
-
-    - path: build\nuget\Certes.Integration.$(CERTES_PACKAGE_VERSION).nupkg
-      name: nupkg-int
-
-    - path: build\nuget\Certes.Integration.Azure.$(CERTES_PACKAGE_VERSION).nupkg
-      name: nupkg-int-azure
       
-    - path: build\certes-cli.zip
+    - path: build/certes-cli.zip
       name: cli
 
 deploy:
@@ -101,17 +112,19 @@ deploy:
     draft: true
     prerelease: true
     on:
-      branch: dev
+      branch:
+        - dev
+        - bld
 
-  - provider: NuGet
-    #server: http://www.nuget.org/api/v2/package                  # remove to push to NuGet.org
-    api_key:
-      secure: enjdo7AiXKaGhj8NC2k3wjQ9mGlU1jxABzG6tuphpM7dNaazlrSlvwR2H1kC4kr+
-    skip_symbols: true
-    symbol_server:           # remove to push symbols to SymbolSource.org
-    artifact: nupkg
-    on:
-      branch: master
+#  - provider: NuGet
+#    #server: http://www.nuget.org/api/v2/package                  # remove to push to NuGet.org
+#    api_key:
+#      secure: enjdo7AiXKaGhj8NC2k3wjQ9mGlU1jxABzG6tuphpM7dNaazlrSlvwR2H1kC4kr+
+#    skip_symbols: true
+#    symbol_server:           # remove to push symbols to SymbolSource.org
+#    artifact: nupkg
+#    on:
+#      branch: master
 
   - provider: NuGet
     server: https://www.myget.org/F/dymetis/api/v2/package
@@ -119,8 +132,9 @@ deploy:
       secure: RSdqUIwRSn8DI5xaa4iWBzOtYU6y3K9JRh07myQpAIRf5IhlwsZpFsnQOpCg1g7J
     skip_symbols: true
     symbol_server:           # remove to push symbols to SymbolSource.org
-    artifact: nupkg,nupkg-int,,nupkg-int-azure
+    artifact: nupkg
     on:
       branch:
         - dev
+        - bld
         - dev-azure

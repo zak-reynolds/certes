@@ -73,7 +73,7 @@ namespace Certes
                 Assert.Equal(tos, account.GetTermsOfServiceUri());
             }
 
-            mock.Protected().Verify("Dispose", Times.Once(), true);
+            mock.Protected().Verify("Dispose", Times.Never(), true);
         }
 
         [Fact]
@@ -127,7 +127,7 @@ namespace Certes
                 Assert.Equal(regLocation, account.Location);
             }
 
-            mock.Protected().Verify("Dispose", Times.Once(), true);
+            mock.Protected().Verify("Dispose", Times.Never(), true);
         }
 
         private async Task<T> ParsePayload<T>(HttpRequestMessage message)

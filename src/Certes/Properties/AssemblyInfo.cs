@@ -1,13 +1,5 @@
-﻿using System.Reflection;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-// General Information about an assembly is controlled through the following
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Certes")]
-[assembly: AssemblyTrademark("")]
-
+[assembly: Guid("5f6267a0-a6c5-4d1e-b7ff-f8f8d09d8588")]
 [assembly: InternalsVisibleTo("Certes.Tests")]
-[assembly: AssemblyVersion("1.0")]

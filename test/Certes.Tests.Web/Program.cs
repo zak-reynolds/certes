@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using System.IO;
 
-namespace Certes.Examples.AppService
+namespace Certes.Tests.Web
 {
     public class Program
     {
@@ -12,6 +12,7 @@ namespace Certes.Examples.AppService
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
                 .UseStartup<Startup>()
+                .UseApplicationInsights()
                 .Build();
 
             host.Run();

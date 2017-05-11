@@ -244,6 +244,5 @@ ModelManifest.xml
 
 _test/
 build/
-PublishProfiles/
-
-app_data/
+.certes/
+data.json
