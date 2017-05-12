@@ -1,20 +1,30 @@
-﻿using System.Threading.Tasks;
+﻿using Certes.Acme;
+using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
 
 namespace Certes.Integration
 {
     public class InMemoryContextStore : IContextStore
     {
         private static readonly Task CompletedTask = Task.FromResult(0);
-        private CertesContext context;
+        private AcmeAccount account;
+        private readonly Dictionary<AuthorizationIdentifier, AcmeResult<Authorization>> authorizations = new Dictionary<AuthorizationIdentifier, AcmeResult<Authorization>>();
 
-        public Task<CertesContext> Load(bool exclusive)
+        public ValueTask<AcmeResult<Authorization>> Get(AuthorizationIdentifier identifier)
         {
-            return Task.FromResult(context ?? (context = new CertesContext()));
+            authorizations.TryGetValue(identifier, out var authz);
+            return new ValueTask<AcmeResult<Authorization>>(authz);
         }
 
-        public Task Save(CertesContext context, bool release)
+        public async ValueTask<AcmeAccount> GetOrCreate(Func<ValueTask<AcmeAccount>> provider)
         {
-            this.context = context;
+            return account ?? (account = await provider.Invoke());
+        }
+
+        public Task Save(AcmeResult<Authorization> authorization)
+        {
+            authorizations[authorization.Data.Identifier] = authorization;
             return CompletedTask;
         }
     }

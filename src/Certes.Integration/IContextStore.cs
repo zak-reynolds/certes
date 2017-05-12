@@ -1,10 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using Certes.Acme;
+using System;
+using System.Threading.Tasks;
 
 namespace Certes.Integration
 {
     public interface IContextStore
     {
-        Task<CertesContext> Load(bool exclusive = false);
-        Task Save(CertesContext context, bool release = false);
+        ValueTask<AcmeAccount> GetOrCreate(Func<ValueTask<AcmeAccount>> provider);
+
+        ValueTask<AcmeResult<Authorization>> Get(AuthorizationIdentifier identifier);
+        Task Save(AcmeResult<Authorization> authorization);
     }
 }

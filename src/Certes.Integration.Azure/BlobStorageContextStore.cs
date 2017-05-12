@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Certes.Acme;
 
 namespace Certes.Integration.Azure
 {
@@ -17,7 +18,6 @@ namespace Certes.Integration.Azure
         private const string ContainerName = "certes";
         private CloudBlobContainer blobContainer;
         private readonly StorageOptions options;
-        private string leaseId = null;
 
         private CloudBlobContainer BlobContainer
         {
@@ -39,51 +39,59 @@ namespace Certes.Integration.Azure
             this.options = options.Value;
         }
 
-        public async Task<CertesContext> Load(bool exclusive = false)
+        public async ValueTask<AcmeAccount> GetOrCreate(Func<ValueTask<AcmeAccount>> provider)
         {
             var container = BlobContainer;
-            await container.CreateIfNotExistsAsync();
-            var blob = container.GetBlockBlobReference("context.json");
+            var blob = container.GetBlockBlobReference("account.json");
 
-            if (exclusive)
-            {
-                leaseId = await blob.AcquireLeaseAsync(TimeSpan.FromSeconds(60));
-                if (string.IsNullOrWhiteSpace(leaseId))
-                {
-                    return null;
-                }
-            }
-
-            if (!await blob.ExistsAsync())
-            {
-                var ctx = new CertesContext();
-                var json = JsonConvert.SerializeObject(ctx, Formatting.None, jsonSettings);
-                await blob.UploadTextAsync(json, Encoding.UTF8, AccessCondition.GenerateLeaseCondition(leaseId), null, null);
-                return ctx;
-            }
-            else
+            AcmeAccount account = null;
+            if (await blob.ExistsAsync())
             {
                 using (var stream = await blob.OpenReadAsync())
                 using (var reader = new StreamReader(stream))
                 {
                     var json = await reader.ReadToEndAsync();
-                    return JsonConvert.DeserializeObject<CertesContext>(json, jsonSettings);
+                    account = JsonConvert.DeserializeObject<AcmeAccount>(json, jsonSettings);
                 }
             }
+
+            if (account == null)
+            {
+                account = await provider.Invoke();
+                var json = JsonConvert.SerializeObject(account, Formatting.None, jsonSettings);
+                await blob.UploadTextAsync(json);
+            }
+
+            return account;
         }
 
-        public async Task Save(CertesContext context, bool release = false)
+        public async ValueTask<AcmeResult<Authorization>> Get(AuthorizationIdentifier identifier)
         {
             var container = BlobContainer;
-            var blob = container.GetBlockBlobReference("context.json");
+            var blob = container.GetBlockBlobReference($"authz/{identifier.Type}/{identifier.Value}.json");
 
-            var json = JsonConvert.SerializeObject(context, Formatting.None, jsonSettings);
+            if (await blob.ExistsAsync())
+            {
+                using (var stream = await blob.OpenReadAsync())
+                using (var reader = new StreamReader(stream))
+                {
+                    var json = await reader.ReadToEndAsync();
+                    return JsonConvert.DeserializeObject<AcmeResult<Authorization>>(json, jsonSettings);
+                }
+            }
+
+            return null;
+        }
+
+        public async Task Save(AcmeResult<Authorization> authorization)
+        {
+            var identifier = authorization.Data.Identifier;
+            var container = BlobContainer;
+            var blob = container.GetBlockBlobReference($"authz/{identifier.Type}/{identifier.Value}.json");
+
+            var json = JsonConvert.SerializeObject(authorization, Formatting.None, jsonSettings);
             await blob.UploadTextAsync(json);
 
-            if (release && !string.IsNullOrWhiteSpace(leaseId))
-            {
-                await blob.ReleaseLeaseAsync(AccessCondition.GenerateLeaseCondition(leaseId));
-            }
         }
     }
 }
